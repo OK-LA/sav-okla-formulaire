@@ -1,0 +1,25 @@
+{
+  "name": "SAV OK-LA",
+  "short_name": "SAV OK-LA",
+  "description": "Déclarer un problème sur un meuble OK-LA",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf7f1",
+  "theme_color": "#7a4a2b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

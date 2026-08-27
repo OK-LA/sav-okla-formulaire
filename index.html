@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SAV OK-LA — Déclarer un problème</title>
+<meta name="theme-color" content="#7a4a2b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SAV OK-LA">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%237a4a2b'/%3E%3Ctext x='50' y='66' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif'%3EOK%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --brown-900: #3a2416;
+    --brown-700: #5c3820;
+    --brown-500: #7a4a2b;
+    --brown-100: #f4ece3;
+    --cream: #fbf7f1;
+    --orange: #d97b3f;
+    --orange-dark: #b8622c;
+    --green: #3f7a4a;
+    --red: #b8402c;
+    --gray-300: #d8d0c6;
+    --gray-500: #8a8074;
+    --radius: 12px;
+    --shadow: 0 2px 10px rgba(58, 36, 22, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--brown-900);
+    line-height: 1.5;
+    padding-bottom: 40px;
+  }
+  header.app-header {
+    background: var(--brown-500);
+    color: white;
+    padding: 18px 20px;
+    text-align: center;
+  }
+  header.app-header h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  header.app-header p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+  }
+  .progress-wrap {
+    padding: 14px 20px 0;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--gray-300);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: var(--orange);
+    transition: width 0.25s ease;
+  }
+  .progress-label {
+    font-size: 0.78rem;
+    color: var(--gray-500);
+    margin-top: 6px;
+    text-align: right;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 22px;
+  }
+  .step { display: none; }
+  .step.active { display: block; }
+  h2.step-title {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+    color: var(--brown-700);
+  }
+  p.step-sub {
+    margin: 0 0 18px;
+    color: var(--gray-500);
+    font-size: 0.9rem;
+  }
+  label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin: 14px 0 6px;
+    color: var(--brown-700);
+  }
+  label.required::after { content: " *"; color: var(--red); }
+  input[type=text], input[type=email], input[type=tel], input[type=date],
+  select, textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: white;
+    color: var(--brown-900);
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--orange);
+  }
+  textarea { min-height: 100px; resize: vertical; }
+  .hint { font-size: 0.78rem; color: var(--gray-500); margin-top: 4px; }
+  .error-msg {
+    font-size: 0.8rem;
+    color: var(--red);
+    margin-top: 4px;
+    display: none;
+  }
+  .field.invalid .error-msg { display: block; }
+  .field.invalid input, .field.invalid select, .field.invalid textarea {
+    border-color: var(--red);
+  }
+  .radio-row { display: flex; gap: 16px; margin-top: 6px; }
+  .radio-row label {
+    display: flex; align-items: center; gap: 6px;
+    font-weight: 500; margin: 0; font-size: 0.9rem;
+  }
+  .radio-row input { width: auto; }
+
+  .legal-box {
+    background: var(--brown-100);
+    border: 1px solid var(--gray-300);
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 0.9rem;
+    max-height: 260px;
+    overflow-y: auto;
+    margin-bottom: 14px;
+  }
+  .legal-box p { margin: 0 0 10px; }
+  .legal-box p:last-child { margin-bottom: 0; }
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--brown-100);
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+  .checkbox-row input { width: auto; margin-top: 3px; }
+  .checkbox-row label { margin: 0; font-weight: 500; font-size: 0.88rem; }
+
+  .conditional-box {
+    border-left: 3px solid var(--orange);
+    background: var(--brown-100);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 10px;
+    font-size: 0.87rem;
+  }
+  .conditional-box ol, .conditional-box ul { margin: 8px 0 0; padding-left: 20px; }
+  .conditional-box li { margin-bottom: 4px; }
+
+  .btn-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 24px;
+  }
+  button {
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  button.btn-next, button.btn-submit {
+    background: var(--orange);
+    color: white;
+    margin-left: auto;
+  }
+  button.btn-next:hover, button.btn-submit:hover { background: var(--orange-dark); }
+  button.btn-back {
+    background: transparent;
+    color: var(--brown-700);
+    border: 1.5px solid var(--gray-300);
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .photo-drop {
+    border: 2px dashed var(--gray-300);
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    color: var(--gray-500);
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  .photo-drop:hover { border-color: var(--orange); }
+  input[type=file] { display: none; }
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .photo-thumb {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--gray-300);
+  }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .remove-btn {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(58,36,22,0.75); color: white;
+    border-radius: 50%; width: 22px; height: 22px;
+    font-size: 0.8rem; line-height: 1; padding: 0;
+  }
+  .photo-thumb .blur-badge {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(184,64,44,0.88); color: white;
+    font-size: 0.65rem; text-align: center; padding: 2px 0;
+  }
+  .photo-count { font-size: 0.82rem; color: var(--gray-500); margin-top: 8px; }
+
+  .summary-block { margin-bottom: 14px; }
+  .summary-block h3 {
+    font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--gray-500); margin: 0 0 6px;
+  }
+  .summary-block .row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; padding: 3px 0; }
+  .summary-block .row span:first-child { color: var(--gray-500); }
+  .summary-block .row span:last-child { text-align: right; font-weight: 500; }
+
+  .banner {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.87rem;
+    margin-bottom: 14px;
+  }
+  .banner.warn { background: #fbeee0; color: var(--orange-dark); border: 1px solid var(--orange); }
+  .banner.err { background: #fbe4e0; color: var(--red); border: 1px solid var(--red); }
+
+  .confirmation { text-align: center; padding: 20px 0; }
+  .confirmation .claim-id {
+    font-size: 1.4rem; font-weight: 700; color: var(--brown-700);
+    background: var(--brown-100); border-radius: 8px; padding: 12px;
+    margin: 16px 0; letter-spacing: 0.02em;
+  }
+  .spinner {
+    width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.4);
+    border-top-color: white; border-radius: 50%;
+    display: inline-block; margin-right: 8px; vertical-align: -3px;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>SAV OK-LA</h1>
+  <p>Déclarer un problème sur un meuble</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div id="progressFill" style="width: 16%"></div></div>
+  <div class="progress-label" id="progressLabel">Étape 1 / 6</div>
+</div>
+
+<main>
+  <form id="savForm" class="card" novalidate>
+
+    <!-- STEP 0 : IDENTIFICATION -->
+    <section class="step active" data-step="0">
+      <h2 class="step-title">Vos coordonnées</h2>
+      <p class="step-sub">Si vous avez déjà un dossier chez nous, vos informations peuvent se pré-remplir automatiquement.</p>
+
+      <div class="field">
+        <label class="required" for="f-email">Email</label>
+        <input type="email" id="f-email" required>
+        <div class="error-msg">Merci de renseigner un email valide.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-telephone">Téléphone</label>
+        <input type="tel" id="f-telephone" required>
+        <div class="error-msg">Merci de renseigner un numéro de téléphone.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-nom">Nom complet</label>
+        <input type="text" id="f-nom" required>
+        <div class="error-msg">Merci de renseigner votre nom.</div>
+      </div>
+
+      <div class="field">
+        <label for="f-adresse">Adresse</label>
+        <textarea id="f-adresse" rows="2"></textarea>
+        <div class="hint">Facultatif, mais utile en cas d'échange ou de reprise.</div>
+      </div>
+    </section>
+
+    <!-- STEP 1 : MESSAGE LEGAL -->
+    <section class="step" data-step="1">
+      <h2 class="step-title">Avant de continuer</h2>
+      <p class="step-sub">Merci de lire ces informations, elles conditionnent le traitement de votre dossier.</p>
+
+      <div class="legal-box">
+        <p>Vos meubles sont couverts par la garantie légale de conformité pendant 2 ans à compter de la livraison, dans les conditions prévues par la loi : elle couvre les défauts de fabrication existants dès la livraison — pas l'usure normale, un choc, une mauvaise utilisation, une exposition inadaptée ou un montage non conforme à la notice.</p>
+        <p>Chaque dossier est examiné individuellement sur la base des informations, photos et vidéos transmises : des éléments précis, complets et conformes à ce qui est demandé conditionnent le traitement de votre demande.</p>
+        <p>Si votre achat n'incluait pas la livraison, le dépôt et le retrait du produit pour un échange se font en magasin, comme lors de votre achat.</p>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="f-legal-ack">
+        <label for="f-legal-ack">J'ai lu et je comprends les conditions de garantie ci-dessus.</label>
+      </div>
+      <div class="field" style="margin-top:6px;"><div class="error-msg" style="display:none;" id="legal-error">Merci de confirmer avoir lu ce message avant de continuer.</div></div>
+    </section>
+
+    <!-- STEP 2 : ACHAT & PRODUIT -->
+    <section class="step" data-step="2">
+      <h2 class="step-title">Le produit concerné</h2>
+      <p class="step-sub">Ces informations nous permettent de retrouver votre commande.</p>
+
+      <div class="field">
+        <label class="required" for="f-magasin">Magasin d'achat</label>
+        <select id="f-magasin" required>
+          <option value="" disabled selected>Choisir un magasin</option>
+          <option>Ham</option>
+          <option>Longueau</option>
+          <option>Breteuil</option>
+          <option>Roye</option>
+        </select>
+        <div class="error-msg">Merci de choisir le magasin où l'achat a été effectué.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-reference">Référence du produit</label>
+        <input type="text" id="f-reference" required>
+        <div class="hint">Indiquée sur votre facture ou sur l'étiquette du produit.</div>
+        <div class="error-msg">Merci de renseigner la référence du produit.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-date-achat">Date d'achat</label>
+        <input type="date" id="f-date-achat" required>
+        <div class="error-msg">Merci de renseigner la date d'achat.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-date-livraison">Date de livraison</label>
+        <input type="date" id="f-date-livraison" required>
+        <div class="error-msg">Merci de renseigner la date de livraison.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-date-deballage">Date de déballage / montage</label>
+        <input type="date" id="f-date-deballage" required>
+        <div class="error-msg">Merci de renseigner la date de déballage.</div>
+      </div>
+
+      <div id="deballage-tardif-box" class="conditional-box" style="display:none;">
+        <strong>Le déballage a eu lieu plusieurs jours après la livraison.</strong>
+        <div class="field" style="margin-top:8px;">
+          <label class="required" for="f-raison-deballage">Pour quelle raison le produit n'a-t-il pas été déballé/monté rapidement ?</label>
+          <textarea id="f-raison-deballage" rows="2"></textarea>
+          <div class="error-msg">Merci de préciser la raison.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-monte-par">Le produit a-t-il été monté par vous, ou livré déjà monté ?</label>
+        <select id="f-monte-par" required>
+          <option value="" disabled selected>Choisir</option>
+          <option>Monté par moi-même</option>
+          <option>Livré déjà monté</option>
+          <option>Non applicable</option>
+        </select>
+        <div class="error-msg">Merci de répondre à cette question.</div>
+      </div>
+    </section>
+
+    <!-- STEP 3 : PROBLEME -->
+    <section class="step" data-step="3">
+      <h2 class="step-title">Le problème rencontré</h2>
+      <p class="step-sub">Décrivez ce que vous constatez, le plus précisément possible.</p>
+
+      <div class="field">
+        <label class="required" for="f-piece">Pièce concernée</label>
+        <input type="text" id="f-piece" required placeholder="ex. accoudoir droit, pied arrière gauche...">
+        <div class="error-msg">Merci d'indiquer la pièce concernée.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-nature">Nature du problème constaté</label>
+        <select id="f-nature" required>
+          <option value="" disabled selected>Choisir</option>
+          <option>Pièce cassée / fissurée</option>
+          <option>Pièce manquante à la livraison</option>
+          <option>Tissu déchiré / troué / taché</option>
+          <option>Affaissement / perte de fermeté</option>
+          <option>Mécanisme qui ne fonctionne pas (roulette, vérin, charnière...)</option>
+          <option>Défaut esthétique (couleur, finition)</option>
+          <option>Autre</option>
+        </select>
+        <div class="error-msg">Merci de choisir la nature du problème.</div>
+      </div>
+
+      <div id="affaissement-box" class="conditional-box" style="display:none;">
+        <strong>Protocole de mesure pour un affaissement</strong>
+        <ol>
+          <li>Posez une latte droite, une règle rigide ou un manche à balai en ligne droite sur la zone concernée (dans le sens de la longueur pour un matelas, en travers de l'assise pour un canapé), en dehors des coutures.</li>
+          <li>Mesurez avec un mètre ruban l'espace entre le bâton et le point le plus bas du creux.</li>
+          <li>Photographiez la mesure de façon lisible : le bâton, le creux et le mètre affichant la valeur, sur la même photo. Ajoutez cette photo à l'étape suivante.</li>
+        </ol>
+        <div class="field" style="margin-top:8px;">
+          <label for="f-poids">Votre tranche de poids (facultatif)</label>
+          <select id="f-poids">
+            <option value="">Préfère ne pas répondre</option>
+            <option>Moins de 70 kg</option>
+            <option>70-90 kg</option>
+            <option>90-110 kg</option>
+            <option>Plus de 110 kg</option>
+          </select>
+          <div class="hint">Donnée de contexte secondaire ; la mesure au bâton reste la preuve principale.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-description">Description détaillée du problème</label>
+        <textarea id="f-description" rows="5" required placeholder="Que constatez-vous ? Depuis quand ? Dans quelles circonstances ?"></textarea>
+        <div class="error-msg">Merci de décrire le problème (20 caractères minimum).</div>
+      </div>
+    </section>
+
+    <!-- STEP 4 : PHOTOS -->
+    <section class="step" data-step="4">
+      <h2 class="step-title">Photos</h2>
+      <p class="step-sub">Deux photos minimum : une vue d'ensemble du produit, puis un ou plusieurs gros plans du défaut sous différents angles, le plus net possible.</p>
+
+      <div class="photo-drop" id="photoDrop">
+        📷 Appuyez pour ajouter des photos
+        <input type="file" id="f-photos" accept="image/*" multiple>
+      </div>
+      <div class="photo-count" id="photoCount">0 photo ajoutée (2 minimum)</div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <div class="error-msg" id="photos-error" style="display:none; margin-top:8px;">Merci d'ajouter au moins 2 photos (vue d'ensemble + gros plan).</div>
+    </section>
+
+    <!-- STEP 5 : RECAP -->
+    <section class="step" data-step="5">
+      <h2 class="step-title">Récapitulatif</h2>
+      <p class="step-sub">Vérifiez vos informations avant l'envoi.</p>
+      <div id="recapContent"></div>
+      <div id="submitBanner"></div>
+    </section>
+
+    <!-- CONFIRMATION -->
+    <section class="step" data-step="6">
+      <div class="confirmation">
+        <h2 class="step-title">Dossier envoyé ✅</h2>
+        <p>Votre demande a bien été transmise à notre service SAV.</p>
+        <div class="claim-id" id="claimIdDisplay"></div>
+        <p>Vous recevrez un email de suivi à chaque étape du traitement de votre dossier.</p>
+      </div>
+    </section>
+
+    <div class="btn-row" id="btnRow">
+      <button type="button" class="btn-back" id="btnBack">Retour</button>
+      <button type="button" class="btn-next" id="btnNext">Continuer</button>
+    </div>
+  </form>
+</main>
+
+<script>
+/* ===================== Configuration ===================== */
+const CONFIG = {
+  API_BASE: "https://sav-okla-proxy.okla-sav.workers.dev",
+};
+
+const STEP_LABELS = [
+  "Coordonnées", "Message légal", "Produit", "Problème", "Photos", "Récapitulatif"
+];
+const DEBALLAGE_TARDIF_SEUIL_JOURS = 5;
+const DRAFT_KEY = "sav-okla-draft-v1";
+
+/* ===================== State ===================== */
+let currentStep = 0;
+const TOTAL_STEPS = 6; // steps 0..5, step 6 = confirmation (not counted in progress)
+let photos = []; // {filename, contentType, dataUrl, base64, isBlurry}
+
+/* ===================== Helpers ===================== */
+const $ = (sel) => document.querySelector(sel);
+const steps = () => Array.from(document.querySelectorAll(".step"));
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+function updateProgress() {
+  const pct = Math.round(((currentStep + 1) / TOTAL_STEPS) * 100);
+  $("#progressFill").style.width = pct + "%";
+  $("#progressLabel").textContent = `Étape ${currentStep + 1} / ${TOTAL_STEPS} — ${STEP_LABELS[currentStep]}`;
+}
+
+function showStep(n) {
+  steps().forEach((s) => s.classList.toggle("active", Number(s.dataset.step) === n));
+  currentStep = n;
+  const btnRow = $("#btnRow");
+  if (n === 6) {
+    btnRow.style.display = "none";
+  } else {
+    btnRow.style.display = "flex";
+    $("#btnBack").style.visibility = n === 0 ? "hidden" : "visible";
+    $("#btnNext").textContent = n === 5 ? "Envoyer le dossier" : "Continuer";
+    $("#btnNext").classList.toggle("btn-submit", n === 5);
+    updateProgress();
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function setInvalid(fieldEl, invalid) {
+  fieldEl.classList.toggle("invalid", invalid);
+}
+
+/* ===================== Conditional logic ===================== */
+function refreshDeballageTardif() {
+  const liv = $("#f-date-livraison").value;
+  const deb = $("#f-date-deballage").value;
+  const box = $("#deballage-tardif-box");
+  if (liv && deb && daysBetween(liv, deb) > DEBALLAGE_TARDIF_SEUIL_JOURS) {
+    box.style.display = "block";
+  } else {
+    box.style.display = "none";
+    $("#f-raison-deballage").closest(".field").classList.remove("invalid");
+  }
+}
+$("#f-date-livraison").addEventListener("change", refreshDeballageTardif);
+$("#f-date-deballage").addEventListener("change", refreshDeballageTardif);
+
+function refreshAffaissement() {
+  const box = $("#affaissement-box");
+  box.style.display = $("#f-nature").value === "Affaissement / perte de fermeté" ? "block" : "none";
+}
+$("#f-nature").addEventListener("change", refreshAffaissement);
+
+/* ===================== Client lookup (pré-remplissage) ===================== */
+async function tryLookup() {
+  const email = $("#f-email").value.trim();
+  const tel = $("#f-telephone").value.trim();
+  if (!email && !tel) return;
+  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
+  try {
+    const qs = new URLSearchParams();
+    if (email) qs.set("email", email);
+    if (tel) qs.set("tel", tel);
+    const res = await fetch(`${CONFIG.API_BASE}/api/lookup?${qs.toString()}`);
+    const data = await res.json();
+    if (data.found) {
+      if (!$("#f-nom").value) $("#f-nom").value = data.nom || "";
+      if (!$("#f-adresse").value) $("#f-adresse").value = data.adresse || "";
+    }
+  } catch (e) { /* silencieux : le pré-remplissage est un confort, pas un blocage */ }
+}
+$("#f-email").addEventListener("blur", tryLookup);
+$("#f-telephone").addEventListener("blur", tryLookup);
+
+/* ===================== Photos : compression + détection de flou ===================== */
+$("#photoDrop").addEventListener("click", () => $("#f-photos").click());
+
+function estimateBlurScore(img) {
+  const w = 240;
+  const h = Math.round((img.height / img.width) * w) || 240;
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const gray = new Float32Array(w * h);
+  for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+    gray[p] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+  }
+  // Variance du Laplacien : indicateur heuristique de netteté (pas décisionnel).
+  let sum = 0, sumSq = 0, n = 0;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = y * w + x;
+      const lap = 4 * gray[idx] - gray[idx - 1] - gray[idx + 1] - gray[idx - w] - gray[idx + w];
+      sum += lap; sumSq += lap * lap; n++;
+    }
+  }
+  const mean = sum / n;
+  return sumSq / n - mean * mean;
+}
+
+function resizeToDataUrl(img, maxDim, quality) {
+  let { width, height } = img;
+  if (width > maxDim || height > maxDim) {
+    const scale = maxDim / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+  const c = document.createElement("canvas");
+  c.width = width; c.height = height;
+  c.getContext("2d").drawImage(img, 0, 0, width, height);
+  return c.toDataURL("image/jpeg", quality);
+}
+
+function renderPhotos() {
+  const grid = $("#photoGrid");
+  grid.innerHTML = "";
+  photos.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "photo-thumb";
+    div.innerHTML = `
+      <img src="${p.dataUrl}" alt="Photo ${i + 1}">
+      <button type="button" class="remove-btn" data-idx="${i}">✕</button>
+      ${p.isBlurry ? '<div class="blur-badge">Peut-être floue</div>' : ""}
+    `;
+    grid.appendChild(div);
+  });
+  grid.querySelectorAll(".remove-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      photos.splice(Number(btn.dataset.idx), 1);
+      renderPhotos();
+    });
+  });
+  $("#photoCount").textContent = `${photos.length} photo${photos.length > 1 ? "s" : ""} ajoutée${photos.length > 1 ? "s" : ""} (2 minimum)`;
+}
+
+$("#f-photos").addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    const dataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+    const img = await new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.src = dataUrl;
+    });
+    const blurScore = estimateBlurScore(img);
+    const resized = resizeToDataUrl(img, 1600, 0.82);
+    photos.push({
+      filename: file.name || `photo-${Date.now()}.jpg`,
+      contentType: "image/jpeg",
+      dataUrl: resized,
+      isBlurry: blurScore < 45,
+    });
+  }
+  e.target.value = "";
+  renderPhotos();
+  if (photos.length >= 2) $("#photos-error").style.display = "none";
+});
+
+/* ===================== Validation par étape ===================== */
+function validateStep(n) {
+  let ok = true;
+  const mark = (inputEl, condition) => {
+    const field = inputEl.closest(".field");
+    if (field) setInvalid(field, !condition);
+    if (!condition) ok = false;
+  };
+
+  if (n === 0) {
+    mark($("#f-email"), /.+@.+\..+/.test($("#f-email").value));
+    mark($("#f-telephone"), $("#f-telephone").value.trim().length >= 6);
+    mark($("#f-nom"), $("#f-nom").value.trim().length > 1);
+  }
+
+  if (n === 1) {
+    const checked = $("#f-legal-ack").checked;
+    $("#legal-error").style.display = checked ? "none" : "block";
+    ok = checked;
+  }
+
+  if (n === 2) {
+    mark($("#f-magasin"), !!$("#f-magasin").value);
+    mark($("#f-reference"), $("#f-reference").value.trim().length > 0);
+    mark($("#f-date-achat"), !!$("#f-date-achat").value);
+    mark($("#f-date-livraison"), !!$("#f-date-livraison").value);
+    mark($("#f-date-deballage"), !!$("#f-date-deballage").value);
+    mark($("#f-monte-par"), !!$("#f-monte-par").value);
+    if ($("#deballage-tardif-box").style.display === "block") {
+      mark($("#f-raison-deballage"), $("#f-raison-deballage").value.trim().length > 0);
+    }
+  }
+
+  if (n === 3) {
+    mark($("#f-piece"), $("#f-piece").value.trim().length > 0);
+    mark($("#f-nature"), !!$("#f-nature").value);
+    mark($("#f-description"), $("#f-description").value.trim().length >= 20);
+  }
+
+  if (n === 4) {
+    const enough = photos.length >= 2;
+    $("#photos-error").style.display = enough ? "none" : "block";
+    ok = enough;
+  }
+
+  return ok;
+}
+
+/* ===================== Récapitulatif ===================== */
+function buildRecap() {
+  const row = (k, v) => `<div class="row"><span>${k}</span><span>${v || "—"}</span></div>`;
+  const html = `
+    <div class="summary-block">
+      <h3>Coordonnées</h3>
+      ${row("Nom", $("#f-nom").value)}
+      ${row("Email", $("#f-email").value)}
+      ${row("Téléphone", $("#f-telephone").value)}
+    </div>
+    <div class="summary-block">
+      <h3>Produit</h3>
+      ${row("Magasin", $("#f-magasin").value)}
+      ${row("Référence", $("#f-reference").value)}
+      ${row("Date d'achat", $("#f-date-achat").value)}
+      ${row("Date de livraison", $("#f-date-livraison").value)}
+      ${row("Date de déballage", $("#f-date-deballage").value)}
+      ${row("Monté par", $("#f-monte-par").value)}
+    </div>
+    <div class="summary-block">
+      <h3>Problème</h3>
+      ${row("Pièce concernée", $("#f-piece").value)}
+      ${row("Nature du problème", $("#f-nature").value)}
+      ${row("Photos jointes", photos.length)}
+    </div>
+  `;
+  $("#recapContent").innerHTML = html;
+}
+
+/* ===================== Soumission ===================== */
+async function submitForm() {
+  const btn = $("#btnNext");
+  btn.disabled = true;
+  $("#btnBack").disabled = true;
+  const originalLabel = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Envoi en cours…';
+  $("#submitBanner").innerHTML = "";
+
+  const payload = {
+    nom: $("#f-nom").value.trim(),
+    email: $("#f-email").value.trim(),
+    telephone: $("#f-telephone").value.trim(),
+    adresse: $("#f-adresse").value.trim(),
+    magasin: $("#f-magasin").value,
+    referenceProduit: $("#f-reference").value.trim(),
+    dateAchat: $("#f-date-achat").value,
+    dateLivraison: $("#f-date-livraison").value,
+    dateDeballage: $("#f-date-deballage").value,
+    raisonDeballageTardif: $("#f-raison-deballage").value.trim(),
+    montePar: $("#f-monte-par").value,
+    pieceConcernee: $("#f-piece").value.trim(),
+    natureDuProbleme: $("#f-nature").value,
+    trancheDePoids: $("#f-poids").value,
+    description: $("#f-description").value.trim(),
+    photos: photos.map((p) => ({
+      filename: p.filename,
+      contentType: p.contentType,
+      base64: p.dataUrl.split(",")[1],
+    })),
+  };
+
+  try {
+    if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) {
+      throw new Error("Le formulaire n'est pas encore relié au service d'envoi (API_BASE non configuré).");
+    }
+    const res = await fetch(`${CONFIG.API_BASE}/api/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Erreur inconnue.");
+
+    localStorage.removeItem(DRAFT_KEY);
+    $("#claimIdDisplay").textContent = data.claimId;
+    showStep(6);
+  } catch (e) {
+    $("#submitBanner").innerHTML = `<div class="banner err">Une erreur est survenue : ${e.message}. Vos informations sont conservées, vous pouvez réessayer.</div>`;
+  } finally {
+    btn.disabled = false;
+    $("#btnBack").disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+
+/* ===================== Navigation ===================== */
+$("#btnNext").addEventListener("click", () => {
+  if (!validateStep(currentStep)) return;
+  if (currentStep === 5) { submitForm(); return; }
+  const next = currentStep + 1;
+  if (next === 5) buildRecap();
+  showStep(next);
+});
+
+$("#btnBack").addEventListener("click", () => {
+  if (currentStep === 0) return;
+  showStep(currentStep - 1);
+});
+
+/* ===================== Brouillon local ===================== */
+const DRAFT_FIELDS = ["f-email","f-telephone","f-nom","f-adresse","f-magasin","f-reference",
+  "f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
+  "f-piece","f-nature","f-poids","f-description"];
+
+function saveDraft() {
+  const data = {};
+  DRAFT_FIELDS.forEach((id) => { data[id] = $("#" + id).value; });
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+}
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    DRAFT_FIELDS.forEach((id) => { if (data[id]) $("#" + id).value = data[id]; });
+    refreshDeballageTardif();
+    refreshAffaissement();
+  } catch (e) { /* brouillon corrompu, on ignore */ }
+}
+document.addEventListener("input", () => saveDraft());
+restoreDraft();
+
+/* ===================== Service worker (PWA) ===================== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+updateProgress();
+</script>
+</body>
+</html>
