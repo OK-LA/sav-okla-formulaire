@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SAV OK-LA — Gestion</title>
+<meta name="theme-color" content="#3a2416">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%237a4a2b'/%3E%3Ctext x='50' y='66' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif'%3EOK%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --brown-900: #3a2416;
+    --brown-700: #5c3820;
+    --brown-500: #7a4a2b;
+    --brown-100: #f4ece3;
+    --cream: #fbf7f1;
+    --orange: #d97b3f;
+    --orange-dark: #b8622c;
+    --green: #3f7a4a;
+    --green-bg: #e7efe4;
+    --red: #b8402c;
+    --red-bg: #f7e3dc;
+    --gray-300: #d8d0c6;
+    --gray-500: #8a8074;
+    --radius: 10px;
+    --shadow: 0 2px 10px rgba(58, 36, 22, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--brown-900);
+    line-height: 1.45;
+  }
+  a { color: var(--brown-700); }
+  header.app-header {
+    background: var(--brown-900);
+    color: white;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header.app-header h1 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+  header.app-header .role-badge {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255,255,255,0.14);
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+  }
+  header.app-header .spacer { flex: 1; }
+  header.app-header button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.35);
+    color: white;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  header.app-header button:hover { background: rgba(255,255,255,0.1); }
+
+  main { max-width: 1000px; margin: 0 auto; padding: 20px; }
+  .hidden { display: none !important; }
+
+  /* ---- login ---- */
+  .login-card {
+    max-width: 380px;
+    margin: 60px auto;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 26px;
+    text-align: center;
+  }
+  .login-card h2 { margin: 0 0 6px; color: var(--brown-700); }
+  .login-card p { color: var(--gray-500); font-size: 0.88rem; margin: 0 0 20px; }
+  .login-card input {
+    width: 100%; padding: 12px; border: 1.5px solid var(--gray-300);
+    border-radius: 8px; font-size: 1rem; margin-bottom: 12px; text-align: center;
+  }
+  .login-card button {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--orange); color: white; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+  }
+  .login-card button:hover { background: var(--orange-dark); }
+  .login-error { color: var(--red); font-size: 0.85rem; margin-top: 10px; min-height: 1.2em; }
+
+  /* ---- toolbar ---- */
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+  }
+  .toolbar input[type=search], .toolbar select {
+    padding: 9px 12px; border: 1.5px solid var(--gray-300); border-radius: 8px;
+    font-size: 0.9rem; background: white; color: var(--brown-900);
+  }
+  .toolbar input[type=search] { flex: 1; min-width: 180px; }
+
+  /* ---- list ---- */
+  .dossier-list { display: flex; flex-direction: column; gap: 8px; }
+  .dossier-row {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 12px 16px; display: flex; align-items: center; gap: 14px; cursor: pointer;
+    border: 1.5px solid transparent;
+  }
+  .dossier-row:hover { border-color: var(--orange); }
+  .dossier-row .claim-id { font-weight: 700; color: var(--brown-700); font-size: 0.88rem; min-width: 150px; }
+  .dossier-row .client-name { flex: 1; font-size: 0.9rem; }
+  .dossier-row .magasin { font-size: 0.78rem; color: var(--gray-500); min-width: 90px; }
+  .dossier-row .nature { font-size: 0.82rem; color: var(--gray-500); flex: 1; }
+  .status-pill {
+    font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+    background: var(--brown-100); color: var(--brown-700);
+  }
+  .status-pill.done { background: var(--green-bg); color: var(--green); }
+  .status-pill.blocked { background: var(--red-bg); color: var(--red); }
+  .empty-state { text-align: center; color: var(--gray-500); padding: 40px 0; }
+  .load-more { text-align: center; margin-top: 16px; }
+  .load-more button {
+    background: white; border: 1.5px solid var(--gray-300); border-radius: 8px;
+    padding: 10px 20px; cursor: pointer; font-size: 0.88rem;
+  }
+
+  /* ---- detail ---- */
+  .detail-backlink { display: inline-block; margin-bottom: 14px; font-size: 0.88rem; cursor: pointer; color: var(--brown-700); }
+  .detail-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  .detail-header h2 { margin: 0; color: var(--brown-700); }
+  .detail-header .sub { color: var(--gray-500); font-size: 0.88rem; margin-top: 2px; }
+
+  .panel {
+    background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 18px 20px; margin-bottom: 16px;
+  }
+  .panel h3 {
+    margin: 0 0 14px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--gray-500); border-bottom: 1px solid var(--gray-300); padding-bottom: 8px;
+  }
+  .kv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px 20px; }
+  .kv { font-size: 0.9rem; }
+  .kv .k { color: var(--gray-500); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 2px; }
+  .kv .v { font-weight: 500; }
+  .kv .v.empty { color: var(--gray-300); font-weight: 400; }
+  .description-block { font-size: 0.9rem; white-space: pre-wrap; background: var(--brown-100); border-radius: 8px; padding: 12px 14px; margin-top: 6px; }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
+  .photo-grid a { display: block; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: var(--gray-300); }
+  .photo-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .field label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--brown-700); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.02em; }
+  .field input[type=text], .field input[type=number], .field select, .field textarea {
+    width: 100%; padding: 9px 10px; border: 1.5px solid var(--gray-300); border-radius: 8px;
+    font-size: 0.9rem; font-family: inherit; background: white; color: var(--brown-900);
+  }
+  .field textarea { min-height: 70px; resize: vertical; }
+  .field.checkbox { display: flex; align-items: center; gap: 8px; flex-direction: row; }
+  .field.checkbox label { margin: 0; text-transform: none; font-size: 0.9rem; }
+  .field.checkbox input { width: auto; }
+
+  .save-row { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; align-items: center; }
+  .save-row button {
+    background: var(--orange); color: white; border: none; border-radius: 8px;
+    padding: 11px 22px; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+  }
+  .save-row button:hover { background: var(--orange-dark); }
+  .save-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .save-msg { font-size: 0.85rem; }
+  .save-msg.ok { color: var(--green); }
+  .save-msg.err { color: var(--red); }
+
+  .loading { text-align: center; padding: 40px; color: var(--gray-500); }
+  .spinner {
+    width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4);
+    border-top-color: white; border-radius: 50%;
+    display: inline-block; margin-right: 6px; vertical-align: -3px;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>SAV OK-LA — Gestion<span class="role-badge hidden" id="roleBadge"></span></h1>
+  <div class="spacer"></div>
+  <button type="button" id="btnLogout" class="hidden">Déconnexion</button>
+</header>
+
+<main>
+
+  <!-- LOGIN -->
+  <section id="loginView">
+    <div class="login-card">
+      <h2>Espace gestionnaire</h2>
+      <p>Accès réservé à l'équipe OK-LA.</p>
+      <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password">
+      <button type="button" id="btnLogin">Se connecter</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </section>
+
+  <!-- LIST -->
+  <section id="listView" class="hidden">
+    <div class="toolbar">
+      <input type="search" id="searchInput" placeholder="Rechercher (nom, référence, n° dossier)...">
+      <select id="filterStatut"><option value="">Tous statuts</option></select>
+      <select id="filterMagasin">
+        <option value="">Tous magasins</option>
+        <option>Ham</option><option>Longueau</option><option>Breteuil</option><option>Roye</option>
+        <option>Entrepôt</option><option>Achat internet</option>
+      </select>
+    </div>
+    <div class="dossier-list" id="dossierList"></div>
+    <div class="load-more hidden" id="loadMoreWrap"><button type="button" id="btnLoadMore">Charger plus</button></div>
+  </section>
+
+  <!-- DETAIL -->
+  <section id="detailView" class="hidden"></section>
+
+</main>
+
+<script>
+/* ===================== Config ===================== */
+const API_BASE = "https://sav-okla-proxy.okla-sav.workers.dev";
+const TOKEN_KEY = "sav-okla-gestion-token";
+const ROLE_KEY = "sav-okla-gestion-role";
+
+const CLAIM_STATUS_CHOICES = [
+  "Analyse en cours","Voir avec Antoine","Demande envoyée au fournisseur",
+  "En attente d'informations client","Attente photos","Proposition faite au client",
+  "Proposition au client acceptée","En attente de la réception de la pièce",
+  "Pièce reçue à l'entrepôt","Pièce envoyée au magasin","Refus du fournisseur",
+  "Attente remboursement fournisseur","SAV terminé – produit échangé",
+  "SAV terminé – produit réparé","SAV terminé – remboursement effectué",
+  "SAV clôturé sans suite","SAV mis de côté en attendant","Produit à rendre au fournisseur",
+];
+const QUALIFICATION_CHOICES = [
+  "Défaut de fabrication","Non-conformité à la commande (pièce manquante)",
+  "Dommage de transport découvert à l'ouverture","Affaissement anormal",
+  "Usure prématurée à qualifier","Abimé par le client — choc/impact accidentel",
+  "Abimé par le client — montage non conforme à la notice",
+  "Abimé par le client — exposition inadaptée",
+  "Abimé par le client — modification/réparation personnelle",
+  "Erreur prix","Autre / à qualifier",
+];
+const SOLUTION_CHOICES = [
+  "Avoir / geste commercial","Echange contre neuf","Remboursement complet",
+  "Remplacement de la pièce","Achat de la pièce de remplacement par le client",
+];
+const STATUT_CLIENT_CHOICES = [
+  "Attente réception entrepôt","Envoyé au magasin",
+  "SAV terminé - remboursement client","SAV terminé - produit échangé","SAV terminé - produit réparé",
+];
+const DONE_STATUSES = ["SAV terminé – produit échangé","SAV terminé – produit réparé","SAV terminé – remboursement effectué","SAV clôturé sans suite"];
+const BLOCKED_STATUSES = ["Refus du fournisseur","Voir avec Antoine"];
+
+/* ===================== State ===================== */
+let state = { token: localStorage.getItem(TOKEN_KEY) || "", role: localStorage.getItem(ROLE_KEY) || "", offset: null, currentId: null };
+
+const $ = (sel, root) => (root || document).querySelector(sel);
+
+/* ===================== API ===================== */
+async function api(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  if (res.status === 401) {
+    logout();
+    throw new Error("Session expirée, merci de vous reconnecter.");
+  }
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "Erreur inconnue.");
+  return data;
+}
+
+/* ===================== Auth ===================== */
+function showLoggedOut() {
+  $("#loginView").classList.remove("hidden");
+  $("#listView").classList.add("hidden");
+  $("#detailView").classList.add("hidden");
+  $("#btnLogout").classList.add("hidden");
+  $("#roleBadge").classList.add("hidden");
+}
+function showLoggedIn() {
+  $("#loginView").classList.add("hidden");
+  $("#btnLogout").classList.remove("hidden");
+  const badge = $("#roleBadge");
+  badge.textContent = state.role === "full" ? "Accès complet" : "Magasin";
+  badge.classList.remove("hidden");
+  populateStatutFilter();
+  showList();
+}
+function logout() {
+  state.token = ""; state.role = "";
+  localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(ROLE_KEY);
+  showLoggedOut();
+}
+$("#btnLogout").addEventListener("click", logout);
+
+$("#btnLogin").addEventListener("click", doLogin);
+$("#loginPassword").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+async function doLogin() {
+  const password = $("#loginPassword").value;
+  $("#loginError").textContent = "";
+  if (!password) return;
+  try {
+    const res = await fetch(`${API_BASE}/api/gestion/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Mot de passe incorrect.");
+    state.token = data.token; state.role = data.role;
+    localStorage.setItem(TOKEN_KEY, data.token); localStorage.setItem(ROLE_KEY, data.role);
+    $("#loginPassword").value = "";
+    showLoggedIn();
+  } catch (e) {
+    $("#loginError").textContent = e.message;
+  }
+}
+
+function populateStatutFilter() {
+  const sel = $("#filterStatut");
+  if (sel.options.length > 1) return;
+  CLAIM_STATUS_CHOICES.forEach((s) => {
+    const o = document.createElement("option"); o.textContent = s; sel.appendChild(o);
+  });
+}
+
+/* ===================== List view ===================== */
+function statusPillClass(status) {
+  if (DONE_STATUSES.includes(status)) return "done";
+  if (BLOCKED_STATUSES.includes(status)) return "blocked";
+  return "";
+}
+
+async function loadDossiers(reset) {
+  if (reset) { state.offset = null; $("#dossierList").innerHTML = '<div class="loading">Chargement…</div>'; }
+  const qs = new URLSearchParams();
+  const q = $("#searchInput").value.trim();
+  const statut = $("#filterStatut").value;
+  const magasin = $("#filterMagasin").value;
+  if (q) qs.set("q", q);
+  if (statut) qs.set("statut", statut);
+  if (magasin) qs.set("magasin", magasin);
+  if (!reset && state.offset) qs.set("offset", state.offset);
+
+  try {
+    const data = await api(`/api/gestion/dossiers?${qs.toString()}`);
+    if (reset) $("#dossierList").innerHTML = "";
+    if (reset && data.records.length === 0) {
+      $("#dossierList").innerHTML = '<div class="empty-state">Aucun dossier ne correspond à cette recherche.</div>';
+    }
+    data.records.forEach((r) => $("#dossierList").appendChild(renderDossierRow(r)));
+    state.offset = data.offset;
+    $("#loadMoreWrap").classList.toggle("hidden", !data.offset);
+  } catch (e) {
+    $("#dossierList").innerHTML = `<div class="empty-state">${e.message}</div>`;
+  }
+}
+
+function renderDossierRow(r) {
+  const f = r.fields;
+  const div = document.createElement("div");
+  div.className = "dossier-row";
+  const prenom = (f["Prénom client"] || [])[0] || "";
+  const nom = (f["Nom client"] || [])[0] || "";
+  const magasin = Array.isArray(f["Magasin"]) ? f["Magasin"].join(", ") : (f["Magasin"] || "");
+  const statut = f["Claim Status"] || "";
+  div.innerHTML = `
+    <span class="claim-id">${f["Claim ID"] || ""}</span>
+    <span class="client-name">${prenom} ${nom}</span>
+    <span class="magasin">${magasin}</span>
+    <span class="nature">${f["Nature du problème constaté"] || ""}</span>
+    <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
+  `;
+  div.addEventListener("click", () => openDossier(r.id));
+  return div;
+}
+
+function showList() {
+  $("#detailView").classList.add("hidden");
+  $("#listView").classList.remove("hidden");
+  loadDossiers(true);
+}
+
+$("#btnLoadMore").addEventListener("click", () => loadDossiers(false));
+$("#filterStatut").addEventListener("change", () => loadDossiers(true));
+$("#filterMagasin").addEventListener("change", () => loadDossiers(true));
+let searchDebounce;
+$("#searchInput").addEventListener("input", () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => loadDossiers(true), 350);
+});
+
+/* ===================== Detail view ===================== */
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function kv(label, value) {
+  const v = value === undefined || value === null || value === "" ? '<span class="v empty">—</span>' : `<span class="v">${esc(value)}</span>`;
+  return `<div class="kv"><div class="k">${esc(label)}</div>${v}</div>`;
+}
+function selectHtml(id, choices, current, required) {
+  const opts = ['<option value="">—</option>'].concat(
+    choices.map((c) => `<option value="${esc(c)}" ${c === current ? "selected" : ""}>${esc(c)}</option>`)
+  );
+  return `<select id="${id}" ${required ? "required" : ""}>${opts.join("")}</select>`;
+}
+
+async function openDossier(id) {
+  state.currentId = id;
+  $("#listView").classList.add("hidden");
+  $("#detailView").classList.remove("hidden");
+  $("#detailView").innerHTML = '<div class="loading">Chargement du dossier…</div>';
+  try {
+    const data = await api(`/api/gestion/dossiers/${id}`);
+    renderDetail(data.fields);
+  } catch (e) {
+    $("#detailView").innerHTML = `<div class="detail-backlink" id="backlink">&larr; Retour à la liste</div><div class="empty-state">${e.message}</div>`;
+    $("#backlink").addEventListener("click", showList);
+  }
+}
+
+function renderDetail(f) {
+  const prenom = (f["Prénom client"] || [])[0] || "";
+  const nom = (f["Nom client"] || [])[0] || "";
+  const email = (f["Email client"] || [])[0] || "";
+  const photos = f["Supporting Photos"] || [];
+  const isFull = state.role === "full";
+
+  let html = `<div class="detail-backlink" id="backlink">&larr; Retour à la liste</div>`;
+  html += `<div class="detail-header">
+    <div><h2>${esc(f["Claim ID"] || "")}</h2><div class="sub">${esc(prenom)} ${esc(nom)}${email ? " · " + esc(email) : ""}</div></div>
+  </div>`;
+
+  html += `<div class="panel"><h3>Déclaré par le client</h3>
+    <div class="kv-grid">
+      ${kv("Magasin", f["Magasin"])}
+      ${kv("Référence produit", f["Référence produit"])}
+      ${kv("Pièce concernée", f["Pièce concernée"])}
+      ${kv("Nature du problème", f["Nature du problème constaté"])}
+      ${kv("Date de la demande", f["Date de la demande"])}
+      ${isFull ? kv("Date d'achat", f["date achat"]) : ""}
+      ${isFull ? kv("Date de livraison", f["Date de livraison"]) : ""}
+      ${isFull ? kv("Date de déballage/montage", f["Date de déballage/montage"]) : ""}
+      ${isFull ? kv("Monté par", f["Produit monté par vous ou livré déjà monté ?"]) : ""}
+    </div>
+    ${isFull && f["Claim Description"] ? `<div class="description-block">${esc(f["Claim Description"])}</div>` : ""}
+    ${photos.length ? `<div class="photo-grid">${photos.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc((p.thumbnails && p.thumbnails.large) ? p.thumbnails.large.url : p.url)}" alt=""></a>`).join("")}</div>` : ""}
+  </div>`;
+
+  if (isFull) {
+    html += `<div class="panel"><h3>Traitement (Émilie)</h3>
+      <div class="edit-grid">
+        <div class="field"><label for="f-qualification">Qualification retenue</label>${selectHtml("f-qualification", QUALIFICATION_CHOICES, f["Qualification retenue"])}</div>
+        <div class="field"><label for="f-claimstatus">Claim Status</label>${selectHtml("f-claimstatus", CLAIM_STATUS_CHOICES, f["Claim Status"])}</div>
+        <div class="field"><label for="f-solution">Solution proposée</label>${selectHtml("f-solution", SOLUTION_CHOICES, (f["Solution proposée"] || [])[0])}</div>
+        <div class="field"><label for="f-numsuivi">Numéro suivi</label><input type="text" id="f-numsuivi" value="${esc(f["Numéro suivi"])}"></div>
+        <div class="field"><label for="f-montantavoir">Montant avoir (€)</label><input type="number" step="0.01" id="f-montantavoir" value="${esc(f["Montant avoir"])}"></div>
+        <div class="field"><label for="f-rembfourn">Remboursement fournisseur (€)</label><input type="number" step="0.01" id="f-rembfourn" value="${esc(f["Remboursement fournisseur"])}"></div>
+        <div class="field"><label for="f-numavoir">Numéro avoir</label><input type="text" id="f-numavoir" value="${esc(f["Numéro avoir"])}"></div>
+        <div class="field"><label for="f-chiantitude">Chiantitude du client (1-5)</label><input type="number" min="1" max="5" id="f-chiantitude" value="${esc(f["Chiantitude du client"])}"></div>
+      </div>
+      <div class="field" style="margin-top:14px;"><label for="f-notes">Notes</label><textarea id="f-notes">${esc(f["Notes"])}</textarea></div>
+      <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
+      <div class="save-row"><span class="save-msg" id="saveMsgFull"></span><button type="button" id="btnSaveFull">Enregistrer</button></div>
+    </div>`;
+  }
+
+  html += `<div class="panel"><h3>Clôture (magasin)</h3>
+    <div class="edit-grid">
+      <div class="field"><label for="f-statutclient">Statut Client</label>${selectHtml("f-statutclient", STATUT_CLIENT_CHOICES, f["Statut Client"])}</div>
+      <div class="field"><label for="f-cloturepar">Clôturé par (nom/code vendeur)</label><input type="text" id="f-cloturepar" value="${esc(f["Clôturé par"])}"></div>
+      <div class="field"><label for="f-retrait">Retrait par le client (date)</label><input type="date" id="f-retrait" value="${esc(f["Retrait par le client"])}"></div>
+      <div class="field checkbox"><input type="checkbox" id="f-solutionexec" ${f["Solution exécutée"] ? "checked" : ""}><label for="f-solutionexec">Solution exécutée</label></div>
+    </div>
+    <div class="save-row"><span class="save-msg" id="saveMsgMagasin"></span><button type="button" id="btnSaveMagasin">Enregistrer</button></div>
+  </div>`;
+
+  $("#detailView").innerHTML = html;
+  $("#backlink").addEventListener("click", showList);
+  if (isFull) $("#btnSaveFull").addEventListener("click", saveFullSection);
+  $("#btnSaveMagasin").addEventListener("click", saveMagasinSection);
+}
+
+async function saveSection(btn, msgEl, fields) {
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Enregistrement…';
+  msgEl.textContent = ""; msgEl.className = "save-msg";
+  try {
+    await api(`/api/gestion/dossiers/${state.currentId}`, { method: "PATCH", body: JSON.stringify({ fields }) });
+    msgEl.textContent = "Enregistré."; msgEl.classList.add("ok");
+  } catch (e) {
+    msgEl.textContent = e.message; msgEl.classList.add("err");
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+
+function saveFullSection() {
+  const val = (id) => $("#" + id).value;
+  const fields = {
+    qualificationRetenue: val("f-qualification"),
+    claimStatus: val("f-claimstatus"),
+    solutionProposee: val("f-solution") ? [val("f-solution")] : [],
+    numeroSuivi: val("f-numsuivi"),
+    montantAvoir: val("f-montantavoir") ? Number(val("f-montantavoir")) : null,
+    remboursementFournisseur: val("f-rembfourn") ? Number(val("f-rembfourn")) : null,
+    numeroAvoir: val("f-numavoir"),
+    chiantitudeClient: val("f-chiantitude") ? Number(val("f-chiantitude")) : null,
+    notes: val("f-notes"),
+    infos: val("f-infos"),
+  };
+  saveSection($("#btnSaveFull"), $("#saveMsgFull"), fields);
+}
+
+function saveMagasinSection() {
+  const val = (id) => $("#" + id).value;
+  const fields = {
+    statutClient: val("f-statutclient"),
+    cloturePar: val("f-cloturepar"),
+    retraitParLeClient: val("f-retrait"),
+    solutionExecutee: $("#f-solutionexec").checked,
+  };
+  saveSection($("#btnSaveMagasin"), $("#saveMsgMagasin"), fields);
+}
+
+/* ===================== Boot ===================== */
+if (state.token && state.role) {
+  showLoggedIn();
+} else {
+  showLoggedOut();
+}
+</script>
+</body>
+</html>
