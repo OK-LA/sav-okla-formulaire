@@ -305,7 +305,13 @@
       </div>
 
       <div class="field">
-        <label class="required" for="f-nom">Nom complet</label>
+        <label class="required" for="f-prenom">Prénom</label>
+        <input type="text" id="f-prenom" required>
+        <div class="error-msg">Merci de renseigner votre prénom.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-nom">Nom</label>
         <input type="text" id="f-nom" required>
         <div class="error-msg">Merci de renseigner votre nom.</div>
       </div>
@@ -348,6 +354,7 @@
           <option>Longueau</option>
           <option>Breteuil</option>
           <option>Roye</option>
+          <option>Achat internet</option>
         </select>
         <div class="error-msg">Merci de choisir le magasin où l'achat a été effectué.</div>
       </div>
@@ -479,7 +486,7 @@
         <h2 class="step-title">Dossier envoyé ✅</h2>
         <p>Votre demande a bien été transmise à notre service SAV.</p>
         <div class="claim-id" id="claimIdDisplay"></div>
-        <p>Vous recevrez un email de suivi à chaque étape du traitement de votre dossier.</p>
+        <p>Conservez ce numéro de dossier, il vous sera utile pour toute question auprès du magasin.</p>
       </div>
     </section>
 
@@ -575,6 +582,7 @@ async function tryLookup() {
     const res = await fetch(`${CONFIG.API_BASE}/api/lookup?${qs.toString()}`);
     const data = await res.json();
     if (data.found) {
+      if (!$("#f-prenom").value) $("#f-prenom").value = data.prenom || "";
       if (!$("#f-nom").value) $("#f-nom").value = data.nom || "";
       if (!$("#f-adresse").value) $("#f-adresse").value = data.adresse || "";
     }
@@ -685,6 +693,7 @@ function validateStep(n) {
   if (n === 0) {
     mark($("#f-email"), /.+@.+\..+/.test($("#f-email").value));
     mark($("#f-telephone"), $("#f-telephone").value.trim().length >= 6);
+    mark($("#f-prenom"), $("#f-prenom").value.trim().length > 1);
     mark($("#f-nom"), $("#f-nom").value.trim().length > 1);
   }
 
@@ -727,6 +736,7 @@ function buildRecap() {
   const html = `
     <div class="summary-block">
       <h3>Coordonnées</h3>
+      ${row("Prénom", $("#f-prenom").value)}
       ${row("Nom", $("#f-nom").value)}
       ${row("Email", $("#f-email").value)}
       ${row("Téléphone", $("#f-telephone").value)}
@@ -760,6 +770,7 @@ async function submitForm() {
   $("#submitBanner").innerHTML = "";
 
   const payload = {
+    prenom: $("#f-prenom").value.trim(),
     nom: $("#f-nom").value.trim(),
     email: $("#f-email").value.trim(),
     telephone: $("#f-telephone").value.trim(),
@@ -821,7 +832,7 @@ $("#btnBack").addEventListener("click", () => {
 });
 
 /* ===================== Brouillon local ===================== */
-const DRAFT_FIELDS = ["f-email","f-telephone","f-nom","f-adresse","f-magasin","f-reference",
+const DRAFT_FIELDS = ["f-email","f-telephone","f-prenom","f-nom","f-adresse","f-magasin","f-reference",
   "f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
   "f-piece","f-nature","f-poids","f-description"];
 
