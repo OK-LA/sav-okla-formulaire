@@ -142,11 +142,12 @@ function renderDossierRow(r) {
   div.className = "dossier-row";
   const prenom = (f["Prénom client"] || [])[0] || "";
   const nom = (f["Nom client"] || [])[0] || "";
+  const nomAffiche = (prenom || nom) ? `${prenom} ${nom}`.trim() : (f["Client"] || "");
   const magasin = Array.isArray(f["Magasin"]) ? f["Magasin"].join(", ") : (f["Magasin"] || "");
   const statut = f["Claim Status"] || "";
   div.innerHTML = `
-    <span class="claim-id">${f["Numéro SAV"] || ""}</span>
-    <span class="client-name">${prenom} ${nom}</span>
+    <span class="claim-id">${esc(nomAffiche)}</span>
+    <span class="client-name">${esc(f["Référence dossier"] || "")}</span>
     <span class="magasin">${magasin}</span>
     <span class="nature">${f["Nature du problème constaté"] || ""}</span>
     <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
@@ -204,9 +205,10 @@ function renderDetail(f) {
   const photos = f["Supporting Photos"] || [];
   const isFull = state.role === "full";
 
+  const nomAffiche = (prenom || nom) ? `${prenom} ${nom}`.trim() : (f["Client"] || "");
   let html = `<div class="detail-backlink" id="backlink">&larr; Retour à la liste</div>`;
   html += `<div class="detail-header">
-    <div><h2>${esc(f["Numéro SAV"] || "")}</h2><div class="sub">${esc(prenom)} ${esc(nom)}${email ? " · " + esc(email) : ""}</div></div>
+    <div><h2>${esc(nomAffiche)}</h2><div class="sub">${esc(f["Référence dossier"] || "")}${email ? " · " + esc(email) : ""}</div></div>
   </div>`;
 
   html += `<div class="panel"><h3>Déclaré par le client</h3>
