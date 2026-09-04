@@ -233,34 +233,24 @@ const API_BASE = "https://sav-okla-proxy.okla-sav.workers.dev";
 const TOKEN_KEY = "sav-okla-gestion-token";
 const ROLE_KEY = "sav-okla-gestion-role";
 
-const CLAIM_STATUS_CHOICES = [
-  "Analyse en cours","Voir avec Antoine","Demande envoyée au fournisseur",
-  "En attente d'informations client","Attente photos","Proposition faite au client",
-  "Proposition au client acceptée","En attente de la réception de la pièce",
-  "Pièce reçue à l'entrepôt","Pièce envoyée au magasin","Refus du fournisseur",
-  "Attente remboursement fournisseur","SAV terminé – produit échangé",
-  "SAV terminé – produit réparé","SAV terminé – remboursement effectué",
-  "SAV clôturé sans suite","SAV mis de côté en attendant","Produit à rendre au fournisseur",
-];
-const QUALIFICATION_CHOICES = [
-  "Défaut de fabrication","Non-conformité à la commande (pièce manquante)",
-  "Dommage de transport découvert à l'ouverture","Affaissement anormal",
-  "Usure prématurée à qualifier","Abimé par le client — choc/impact accidentel",
-  "Abimé par le client — montage non conforme à la notice",
-  "Abimé par le client — exposition inadaptée",
-  "Abimé par le client — modification/réparation personnelle",
-  "Erreur prix","Autre / à qualifier",
-];
-const SOLUTION_CHOICES = [
-  "Avoir / geste commercial","Echange contre neuf","Remboursement complet",
-  "Remplacement de la pièce","Achat de la pièce de remplacement par le client",
-];
-const STATUT_CLIENT_CHOICES = [
-  "Attente réception entrepôt","Envoyé au magasin",
-  "SAV terminé - remboursement client","SAV terminé - produit échangé","SAV terminé - produit réparé",
-];
-const DONE_STATUSES = ["SAV terminé – produit échangé","SAV terminé – produit réparé","SAV terminé – remboursement effectué","SAV clôturé sans suite"];
-const BLOCKED_STATUSES = ["Refus du fournisseur","Voir avec Antoine"];
+// Récupérés en direct depuis Airtable au login (voir loadChoices) plutôt que recopiés en
+// dur ici — un accent ou une apostrophe typographique mal recopiée ferait échouer un
+// enregistrement silencieusement côté serveur (l'option n'existerait pas pour Airtable).
+let CLAIM_STATUS_CHOICES = [];
+let QUALIFICATION_CHOICES = [];
+let SOLUTION_CHOICES = [];
+let STATUT_CLIENT_CHOICES = [];
+
+async function loadChoices() {
+  try {
+    const data = await api("/api/gestion/choices");
+    CLAIM_STATUS_CHOICES = data.claimStatus || [];
+    QUALIFICATION_CHOICES = data.qualificationRetenue || [];
+    SOLUTION_CHOICES = data.solutionProposee || [];
+    STATUT_CLIENT_CHOICES = data.statutClient || [];
+    populateStatutFilter();
+  } catch (e) { /* si ça échoue, les listes resteront vides — au pire l'edition est bloquée, jamais une mauvaise valeur envoyée */ }
+}
 
 /* ===================== State ===================== */
 let state = { token: localStorage.getItem(TOKEN_KEY) || "", role: localStorage.getItem(ROLE_KEY) || "", offset: null, currentId: null };
@@ -294,13 +284,13 @@ function showLoggedOut() {
   $("#btnLogout").classList.add("hidden");
   $("#roleBadge").classList.add("hidden");
 }
-function showLoggedIn() {
+async function showLoggedIn() {
   $("#loginView").classList.add("hidden");
   $("#btnLogout").classList.remove("hidden");
   const badge = $("#roleBadge");
   badge.textContent = state.role === "full" ? "Accès complet" : "Magasin";
   badge.classList.remove("hidden");
-  populateStatutFilter();
+  await loadChoices();
   showList();
 }
 function logout() {
@@ -343,8 +333,8 @@ function populateStatutFilter() {
 
 /* ===================== List view ===================== */
 function statusPillClass(status) {
-  if (DONE_STATUSES.includes(status)) return "done";
-  if (BLOCKED_STATUSES.includes(status)) return "blocked";
+  if (/^SAV (terminé|clôturé)/.test(status || "")) return "done";
+  if (status === "Refus du fournisseur" || status === "Voir avec Antoine") return "blocked";
   return "";
 }
 
