@@ -365,6 +365,10 @@
         <div class="hint">Indiquée sur votre facture ou sur l'étiquette du produit.</div>
         <div class="error-msg">Merci de renseigner la référence du produit.</div>
         <div class="banner" id="produit-reconnu" style="display:none; background: var(--brown-100); color: var(--brown-700); border: 1px solid var(--gray-300); margin-top: 8px;"></div>
+        <div class="banner warn" id="produit-redirect" style="display:none; margin-top: 8px;">
+          <span id="produit-redirect-text"></span>
+          <a id="produit-redirect-link" href="#" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; font-weight:600; color: var(--orange-dark);">Continuer sur leur site →</a>
+        </div>
       </div>
 
       <div class="field">
@@ -599,8 +603,10 @@ $("#f-telephone").addEventListener("blur", tryLookup);
 /* ===================== Reconnaissance du produit par référence ===================== */
 async function tryProduitLookup() {
   const banner = $("#produit-reconnu");
+  const redirectBanner = $("#produit-redirect");
   const reference = $("#f-reference").value.trim();
   banner.style.display = "none";
+  redirectBanner.style.display = "none";
   if (!reference) return;
   if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
   try {
@@ -610,6 +616,11 @@ async function tryProduitLookup() {
     if (data.found) {
       banner.textContent = `Produit reconnu : ${data.designation} — vérifiez que c'est bien le vôtre avant de continuer.`;
       banner.style.display = "block";
+    }
+    if (data.redirect) {
+      $("#produit-redirect-text").textContent = `Ce produit est distribué par ${data.redirect.fournisseur}, qui gère directement son propre SAV. Pour un traitement plus rapide, faites votre demande sur leur site :`;
+      $("#produit-redirect-link").href = data.redirect.url;
+      redirectBanner.style.display = "block";
     }
   } catch (e) { /* silencieux : confort uniquement, ne bloque jamais la saisie */ }
 }
