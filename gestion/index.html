@@ -450,6 +450,7 @@ function renderDetail(f) {
     <div class="kv-grid">
       ${kv("Magasin", f["Magasin"])}
       ${kv("Référence produit", f["Référence produit"])}
+      ${kv("Désignation produit", (f["Désignation produit"] || [])[0])}
       ${kv("Pièce concernée", f["Pièce concernée"])}
       ${kv("Nature du problème", f["Nature du problème constaté"])}
       ${kv("Date de la demande", f["Date de la demande"])}

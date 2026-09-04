@@ -364,6 +364,7 @@
         <input type="text" id="f-reference" required>
         <div class="hint">Indiquée sur votre facture ou sur l'étiquette du produit.</div>
         <div class="error-msg">Merci de renseigner la référence du produit.</div>
+        <div class="banner" id="produit-reconnu" style="display:none; background: var(--brown-100); color: var(--brown-700); border: 1px solid var(--gray-300); margin-top: 8px;"></div>
       </div>
 
       <div class="field">
@@ -594,6 +595,25 @@ async function tryLookup() {
 }
 $("#f-email").addEventListener("blur", tryLookup);
 $("#f-telephone").addEventListener("blur", tryLookup);
+
+/* ===================== Reconnaissance du produit par référence ===================== */
+async function tryProduitLookup() {
+  const banner = $("#produit-reconnu");
+  const reference = $("#f-reference").value.trim();
+  banner.style.display = "none";
+  if (!reference) return;
+  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
+  try {
+    const qs = new URLSearchParams({ reference });
+    const res = await fetch(`${CONFIG.API_BASE}/api/produit-lookup?${qs.toString()}`);
+    const data = await res.json();
+    if (data.found) {
+      banner.textContent = `Produit reconnu : ${data.designation} — vérifiez que c'est bien le vôtre avant de continuer.`;
+      banner.style.display = "block";
+    }
+  } catch (e) { /* silencieux : confort uniquement, ne bloque jamais la saisie */ }
+}
+$("#f-reference").addEventListener("blur", tryProduitLookup);
 
 /* ===================== Photos : compression + détection de flou ===================== */
 $("#photoDrop").addEventListener("click", () => $("#f-photos").click());
