@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SAV OK-LA — Suivi de dossier</title>
+<meta name="theme-color" content="#7a4a2b">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%237a4a2b'/%3E%3Ctext x='50' y='66' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif'%3EOK%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --brown-900: #3a2416; --brown-700: #5c3820; --brown-500: #7a4a2b; --brown-100: #f4ece3;
+    --cream: #fbf7f1; --orange: #d97b3f; --orange-dark: #b8622c;
+    --green: #3f7a4a; --green-bg: #e7efe4; --red: #b8402c;
+    --gray-300: #d8d0c6; --gray-500: #8a8074; --radius: 12px;
+    --shadow: 0 2px 10px rgba(58, 36, 22, 0.08);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream); color: var(--brown-900); line-height: 1.5; padding-bottom: 40px;
+  }
+  header.app-header { background: var(--brown-500); color: white; padding: 18px 20px; text-align: center; }
+  header.app-header h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+  main { max-width: 640px; margin: 0 auto; padding: 20px; }
+  .card { background: white; border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; margin-bottom: 16px; }
+  h2 { margin: 0 0 4px; font-size: 1.1rem; color: var(--brown-700); }
+  .sub { color: var(--gray-500); font-size: 0.88rem; margin: 0 0 16px; }
+  .status-pill {
+    display: inline-block; font-size: 0.78rem; padding: 4px 12px; border-radius: 20px;
+    background: var(--brown-100); color: var(--brown-700); font-weight: 600; margin-bottom: 10px;
+  }
+  .row { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; padding: 5px 0; border-bottom: 1px solid var(--brown-100); }
+  .row:last-child { border-bottom: none; }
+  .row span:first-child { color: var(--gray-500); }
+  .row span:last-child { font-weight: 500; text-align: right; }
+  label { display: block; font-size: 0.88rem; font-weight: 600; margin: 14px 0 6px; color: var(--brown-700); }
+  textarea, input[type=text] {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--gray-300); border-radius: 8px;
+    font-size: 0.95rem; font-family: inherit; background: white; color: var(--brown-900);
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--orange); }
+  .photo-drop {
+    border: 2px dashed var(--gray-300); border-radius: 10px; padding: 18px; text-align: center;
+    color: var(--gray-500); cursor: pointer; font-size: 0.88rem; margin-top: 10px;
+  }
+  .photo-drop:hover { border-color: var(--orange); }
+  input[type=file] { display: none; }
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+  .photo-thumb { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: var(--gray-300); }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .remove-btn {
+    position: absolute; top: 4px; right: 4px; background: rgba(58,36,22,0.75); color: white;
+    border-radius: 50%; width: 22px; height: 22px; font-size: 0.8rem; line-height: 1; padding: 0; border: none; cursor: pointer;
+  }
+  button.btn-primary {
+    background: var(--orange); color: white; border: none; border-radius: 8px;
+    padding: 12px 22px; font-weight: 600; font-size: 0.95rem; cursor: pointer; margin-top: 16px; width: 100%;
+  }
+  button.btn-primary:hover { background: var(--orange-dark); }
+  button.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .banner { padding: 12px 14px; border-radius: 8px; font-size: 0.87rem; margin-top: 14px; }
+  .banner.ok { background: var(--green-bg); color: var(--green); }
+  .banner.err { background: #fbe4e0; color: var(--red); }
+  .accord-box { background: var(--brown-100); border-radius: 8px; padding: 14px; font-size: 0.9rem; margin-bottom: 10px; }
+  .disclaimer { font-size: 0.76rem; color: var(--gray-500); margin-top: 10px; }
+  .loading, .error-state { text-align: center; padding: 40px 0; color: var(--gray-500); }
+  .spinner {
+    width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: white;
+    border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: -3px; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="app-header"><h1>SAV OK-LA — Suivi de dossier</h1></header>
+
+<main id="app"><div class="loading">Chargement…</div></main>
+
+<script>
+const API_BASE = "https://sav-okla-proxy.okla-sav.workers.dev";
+const params = new URLSearchParams(location.search);
+const token = params.get("token") || "";
+const $ = (sel, root) => (root || document).querySelector(sel);
+let photos = [];
+
+function resizeToDataUrl(img, maxDim, quality) {
+  let { width, height } = img;
+  if (width > maxDim || height > maxDim) {
+    const scale = maxDim / Math.max(width, height);
+    width = Math.round(width * scale); height = Math.round(height * scale);
+  }
+  const c = document.createElement("canvas");
+  c.width = width; c.height = height;
+  c.getContext("2d").drawImage(img, 0, 0, width, height);
+  return c.toDataURL("image/jpeg", 0.82);
+}
+
+async function api(path, options) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...(options || {}),
+    headers: { "Content-Type": "application/json", ...((options && options.headers) || {}) },
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "Erreur inconnue.");
+  return data;
+}
+
+async function boot() {
+  const app = $("#app");
+  if (!token) {
+    app.innerHTML = '<div class="error-state">Lien invalide ou incomplet.</div>';
+    return;
+  }
+  try {
+    const d = await api(`/api/suivi/${token}`);
+    render(d);
+  } catch (e) {
+    app.innerHTML = `<div class="error-state">${e.message}</div>`;
+  }
+}
+
+function render(d) {
+  const app = $("#app");
+  let html = `<div class="card">
+    <span class="status-pill">${esc(d.claimStatus || "—")}</span>
+    <h2>Dossier ${esc(d.claimId)}</h2>
+    <div class="sub">${esc(d.natureDuProbleme)}</div>
+  </div>`;
+
+  if (d.awaitingAcceptance) {
+    html += `<div class="card">
+      <h2>Solution proposée</h2>
+      <div class="accord-box">${esc(d.solutionProposee || "Voir avec votre magasin pour le détail.")}</div>
+      <label for="f-nom-signataire">Votre nom et prénom, pour valider votre accord</label>
+      <input type="text" id="f-nom-signataire" placeholder="Prénom Nom">
+      <button type="button" class="btn-primary" id="btnAccepter">J'accepte cette solution</button>
+      <div class="disclaimer">En cliquant, vous confirmez être d'accord avec la solution proposée. La date, l'heure et cette validation sont enregistrées avec votre dossier.</div>
+      <div id="accepterMsg"></div>
+    </div>`;
+  } else if (d.alreadyAccepted) {
+    html += `<div class="card"><div class="banner ok">Vous avez déjà validé la solution proposée pour ce dossier. Merci !</div></div>`;
+  }
+
+  if (d.demandeComplement && !d.reponseClient) {
+    html += `<div class="card">
+      <h2>Complément demandé</h2>
+      <div class="accord-box">${esc(d.demandeComplement)}</div>
+      <label for="f-message">Votre réponse</label>
+      <textarea id="f-message" placeholder="Écrivez votre réponse ici..."></textarea>
+      <div class="photo-drop" id="photoDrop">📷 Appuyez pour ajouter des photos<input type="file" id="f-photos" accept="image/*" multiple></div>
+      <div class="photo-grid" id="photoGrid"></div>
+      <button type="button" class="btn-primary" id="btnRepondre">Envoyer ma réponse</button>
+      <div id="repondreMsg"></div>
+    </div>`;
+  } else if (d.reponseClient) {
+    html += `<div class="card"><div class="banner ok">Votre réponse a bien été transmise à notre équipe.</div></div>`;
+  }
+
+  if (!d.awaitingAcceptance && !d.alreadyAccepted && !(d.demandeComplement && !d.reponseClient) && !d.reponseClient) {
+    html += `<div class="card"><p class="sub" style="margin:0;">Aucune action n'est requise de votre part pour le moment. Revenez consulter ce lien pour suivre l'avancement de votre dossier.</p></div>`;
+  }
+
+  app.innerHTML = html;
+
+  if ($("#btnAccepter")) $("#btnAccepter").addEventListener("click", submitAccepter);
+  if ($("#btnRepondre")) $("#btnRepondre").addEventListener("click", submitRepondre);
+  if ($("#photoDrop")) $("#photoDrop").addEventListener("click", () => $("#f-photos").click());
+  if ($("#f-photos")) $("#f-photos").addEventListener("change", onPhotosChange);
+}
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+async function onPhotosChange(e) {
+  const files = Array.from(e.target.files || []);
+  for (const file of files) {
+    const dataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+    const img = await new Promise((resolve) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.src = dataUrl;
+    });
+    photos.push({ filename: file.name || `photo-${Date.now()}.jpg`, contentType: "image/jpeg", dataUrl: resizeToDataUrl(img, 1600, 0.82) });
+  }
+  e.target.value = "";
+  renderPhotos();
+}
+function renderPhotos() {
+  const grid = $("#photoGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  photos.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "photo-thumb";
+    div.innerHTML = `<img src="${p.dataUrl}" alt=""><button type="button" class="remove-btn" data-idx="${i}">✕</button>`;
+    grid.appendChild(div);
+  });
+  grid.querySelectorAll(".remove-btn").forEach((btn) => {
+    btn.addEventListener("click", () => { photos.splice(Number(btn.dataset.idx), 1); renderPhotos(); });
+  });
+}
+
+async function submitAccepter() {
+  const btn = $("#btnAccepter");
+  const nom = $("#f-nom-signataire").value.trim();
+  const msg = $("#accepterMsg");
+  msg.innerHTML = "";
+  if (!nom) { msg.innerHTML = '<div class="banner err">Merci de saisir votre nom et prénom.</div>'; return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  try {
+    await api(`/api/suivi/${token}/accepter`, { method: "POST", body: JSON.stringify({ nomSignataire: nom }) });
+    boot();
+  } catch (e) {
+    msg.innerHTML = `<div class="banner err">${e.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = "J'accepte cette solution";
+  }
+}
+
+async function submitRepondre() {
+  const btn = $("#btnRepondre");
+  const message = $("#f-message").value.trim();
+  const msg = $("#repondreMsg");
+  msg.innerHTML = "";
+  if (!message && photos.length === 0) { msg.innerHTML = '<div class="banner err">Merci d\'ajouter un message ou une photo.</div>'; return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  try {
+    await api(`/api/suivi/${token}/repondre`, {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+        photos: photos.map((p) => ({ filename: p.filename, contentType: p.contentType, base64: p.dataUrl.split(",")[1] })),
+      }),
+    });
+    boot();
+  } catch (e) {
+    msg.innerHTML = `<div class="banner err">${e.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = "Envoyer ma réponse";
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

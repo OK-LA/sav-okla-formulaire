@@ -479,6 +479,19 @@ function renderDetail(f) {
       <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
       <div class="save-row"><span class="save-msg" id="saveMsgFull"></span><button type="button" id="btnSaveFull">Enregistrer</button></div>
     </div>`;
+
+    const reponsePhotos = f["Photos complémentaires"] || [];
+    html += `<div class="panel"><h3>Échanges avec le client</h3>
+      ${f["Accord client - preuve"] ? `<div class="description-block" style="margin-bottom:14px;">${esc(f["Accord client - preuve"])}</div>` : ""}
+      ${f["Réponse client"] ? `<div class="kv" style="margin-bottom:10px;"><div class="k">Réponse du client</div><div class="v">${esc(f["Réponse client"])}</div></div>` : ""}
+      ${reponsePhotos.length ? `<div class="photo-grid">${reponsePhotos.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc((p.thumbnails && p.thumbnails.large) ? p.thumbnails.large.url : p.url)}" alt=""></a>`).join("")}</div>` : ""}
+      <div class="field" style="margin-top:14px;">
+        <label for="f-demandecomplement">Demander un complément au client (photo, précision...)</label>
+        <textarea id="f-demandecomplement" placeholder="Ex. Merci d'ajouter une photo de l'étiquette du produit.">${esc(f["Demande complément"])}</textarea>
+      </div>
+      ${f["Lien suivi client"] ? `<div class="kv" style="margin-top:10px;"><div class="k">Lien du portail client</div><div class="v"><a href="${esc(f["Lien suivi client"])}" target="_blank" rel="noopener">${esc(f["Lien suivi client"])}</a></div></div>` : ""}
+      <p class="sub" style="margin:10px 0 0;">Le message ci-dessus part au client par email au prochain enregistrement — pense aussi à changer le Claim Status (ex. "En attente d'informations client") dans le panneau Traitement ci-dessus pour déclencher l'envoi.</p>
+    </div>`;
   }
 
   html += `<div class="panel"><h3>Clôture (magasin)</h3>
@@ -525,6 +538,7 @@ function saveFullSection() {
     chiantitudeClient: val("f-chiantitude") ? Number(val("f-chiantitude")) : null,
     notes: val("f-notes"),
     infos: val("f-infos"),
+    demandeComplement: val("f-demandecomplement"),
   };
   saveSection($("#btnSaveFull"), $("#saveMsgFull"), fields);
 }
