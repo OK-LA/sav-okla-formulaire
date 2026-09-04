@@ -236,7 +236,6 @@ function renderDetail(f) {
         <div class="field"><label for="f-montantavoir">Montant avoir (€)</label><input type="number" step="0.01" id="f-montantavoir" value="${esc(f["Montant avoir"])}"></div>
         <div class="field"><label for="f-rembfourn">Remboursement fournisseur (€)</label><input type="number" step="0.01" id="f-rembfourn" value="${esc(f["Remboursement fournisseur"])}"></div>
         <div class="field"><label for="f-numavoir">Numéro avoir</label><input type="text" id="f-numavoir" value="${esc(f["Numéro avoir"])}"></div>
-        <div class="field"><label for="f-chiantitude">Chiantitude du client (1-5)</label><input type="number" min="1" max="5" id="f-chiantitude" value="${esc(f["Chiantitude du client"])}"></div>
       </div>
       <div class="field" style="margin-top:14px;"><label for="f-notes">Notes</label><textarea id="f-notes">${esc(f["Notes"])}</textarea></div>
       <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
@@ -298,7 +297,6 @@ function saveFullSection() {
     montantAvoir: val("f-montantavoir") ? Number(val("f-montantavoir")) : null,
     remboursementFournisseur: val("f-rembfourn") ? Number(val("f-rembfourn")) : null,
     numeroAvoir: val("f-numavoir"),
-    chiantitudeClient: val("f-chiantitude") ? Number(val("f-chiantitude")) : null,
     notes: val("f-notes"),
     infos: val("f-infos"),
     demandeComplement: val("f-demandecomplement"),
