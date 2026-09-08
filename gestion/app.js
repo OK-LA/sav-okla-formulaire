@@ -150,6 +150,7 @@ function renderDossierRow(r) {
     <span class="client-name">${esc(f["Référence dossier"] || "")}</span>
     <span class="magasin">${magasin}</span>
     <span class="nature">${f["Nature du problème constaté"] || ""}</span>
+    ${f["Accord client - preuve"] ? '<span class="status-pill done">✓ Clôturé</span>' : ""}
     <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
   `;
   div.addEventListener("click", () => openDossier(r.id));
@@ -206,16 +207,22 @@ function renderDetail(f) {
   const isFull = state.role === "full";
 
   const nomAffiche = (prenom || nom) ? `${prenom} ${nom}`.trim() : (f["Client"] || "");
+  const reference = f["Référence produit"] || "";
+  const designation = (f["Désignation produit"] || [])[0] || "";
+  const referenceAffichee = reference && designation ? `${reference} — ${designation}` : (reference || designation);
   let html = `<div class="detail-backlink" id="backlink">&larr; Retour à la liste</div>`;
   html += `<div class="detail-header">
     <div><h2>${esc(nomAffiche)}</h2><div class="sub">${esc(f["Référence dossier"] || "")}${email ? " · " + esc(email) : ""}</div></div>
   </div>`;
 
+  if (f["Accord client - preuve"]) {
+    html += `<div class="banner ok" style="font-weight:700; text-align:center; margin-bottom:16px;">✓ Dossier clôturé</div>`;
+  }
+
   html += `<div class="panel"><h3>Déclaré par le client</h3>
     <div class="kv-grid">
       ${kv("Magasin", f["Magasin"])}
-      ${kv("Référence produit", f["Référence produit"])}
-      ${kv("Désignation produit", (f["Désignation produit"] || [])[0])}
+      ${kv("Référence produit", referenceAffichee)}
       ${kv("Pièce concernée", f["Pièce concernée"])}
       ${kv("Nature du problème", f["Nature du problème constaté"])}
       ${kv("Date de la demande", f["Date de la demande"])}
@@ -243,20 +250,22 @@ function renderDetail(f) {
       <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
       <div class="save-row"><span class="save-msg" id="saveMsgFull"></span><button type="button" id="btnSaveFull">Enregistrer</button></div>
     </div>`;
-
-    const reponsePhotos = f["Photos complémentaires"] || [];
-    html += `<div class="panel"><h3>Échanges avec le client</h3>
-      ${f["Accord client - preuve"] ? `<div class="description-block" style="margin-bottom:14px;">${esc(f["Accord client - preuve"])}</div>` : ""}
-      ${f["Réponse client"] ? `<div class="kv" style="margin-bottom:10px;"><div class="k">Réponse du client</div><div class="v">${esc(f["Réponse client"])}</div></div>` : ""}
-      ${reponsePhotos.length ? `<div class="photo-grid">${reponsePhotos.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc((p.thumbnails && p.thumbnails.large) ? p.thumbnails.large.url : p.url)}" alt=""></a>`).join("")}</div>` : ""}
-      <div class="field" style="margin-top:14px;">
-        <label for="f-demandecomplement">Demander un complément au client (photo, précision...)</label>
-        <textarea id="f-demandecomplement" placeholder="Ex. Merci d'ajouter une photo de l'étiquette du produit.">${esc(f["Demande complément"])}</textarea>
-      </div>
-      ${f["Lien suivi client"] ? `<div class="kv" style="margin-top:10px;"><div class="k">Lien du portail client</div><div class="v"><a href="${esc(f["Lien suivi client"])}" target="_blank" rel="noopener">${esc(f["Lien suivi client"])}</a></div></div>` : ""}
-      <p class="sub" style="margin:10px 0 0;">Le message ci-dessus part au client par email au prochain enregistrement — pense aussi à changer le Claim Status (ex. "En attente d'informations client") dans le panneau Traitement ci-dessus pour déclencher l'envoi.</p>
-    </div>`;
   }
+
+  const reponsePhotos = f["Photos complémentaires"] || [];
+  html += `<div class="panel"><h3>Échanges avec le client</h3>
+    ${f["Historique échanges"] ? `<div class="history-log">${esc(f["Historique échanges"])}</div>` : `<p class="sub" style="margin:0 0 14px;">Aucun échange pour l'instant.</p>`}
+    ${reponsePhotos.length ? `<div class="photo-grid" style="margin-bottom:14px;">${reponsePhotos.map((p) => `<a href="${esc(p.url)}" target="_blank" rel="noopener"><img src="${esc((p.thumbnails && p.thumbnails.large) ? p.thumbnails.large.url : p.url)}" alt=""></a>`).join("")}</div>` : ""}
+    ${isFull ? `
+      <div class="field">
+        <label for="f-nouveaumessage">Nouveau message au client (photo, précision...)</label>
+        <textarea id="f-nouveaumessage" placeholder="Ex. Merci d'ajouter une photo de l'étiquette du produit."></textarea>
+      </div>
+      <div class="save-row"><span class="save-msg" id="saveMsgMessage"></span><button type="button" id="btnSendMessage">Envoyer au client</button></div>
+      <p class="sub" style="margin:10px 0 0;">L'envoi ajoute le message à l'historique, passe le dossier en « En attente d'informations client » et déclenche l'email automatiquement.</p>
+    ` : ""}
+    ${f["Lien suivi client"] ? `<div class="kv" style="margin-top:14px;"><div class="k">Lien du portail client</div><div class="v"><a href="${esc(f["Lien suivi client"])}" target="_blank" rel="noopener">${esc(f["Lien suivi client"])}</a></div></div>` : ""}
+  </div>`;
 
   html += `<div class="panel"><h3>Clôture (magasin)</h3>
     <div class="edit-grid">
@@ -271,7 +280,28 @@ function renderDetail(f) {
   $("#detailView").innerHTML = html;
   $("#backlink").addEventListener("click", showList);
   if (isFull) $("#btnSaveFull").addEventListener("click", saveFullSection);
+  if (isFull) $("#btnSendMessage").addEventListener("click", sendMessage);
   $("#btnSaveMagasin").addEventListener("click", saveMagasinSection);
+}
+
+async function sendMessage() {
+  const btn = $("#btnSendMessage");
+  const msgEl = $("#saveMsgMessage");
+  const message = $("#f-nouveaumessage").value.trim();
+  msgEl.textContent = ""; msgEl.className = "save-msg";
+  if (!message) { msgEl.textContent = "Écrivez un message avant d'envoyer."; msgEl.classList.add("err"); return; }
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  try {
+    await api(`/api/gestion/dossiers/${state.currentId}/message`, { method: "POST", body: JSON.stringify({ message }) });
+    msgEl.textContent = "Envoyé."; msgEl.classList.add("ok");
+    openDossier(state.currentId);
+  } catch (e) {
+    msgEl.textContent = e.message; msgEl.classList.add("err");
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
 }
 
 async function saveSection(btn, msgEl, fields) {
@@ -301,7 +331,6 @@ function saveFullSection() {
     numeroAvoir: val("f-numavoir"),
     notes: val("f-notes"),
     infos: val("f-infos"),
-    demandeComplement: val("f-demandecomplement"),
   };
   saveSection($("#btnSaveFull"), $("#saveMsgFull"), fields);
 }

@@ -65,6 +65,7 @@
   .banner.ok { background: var(--green-bg); color: var(--green); }
   .banner.err { background: #fbe4e0; color: var(--red); }
   .accord-box { background: var(--brown-100); border-radius: 8px; padding: 14px; font-size: 0.9rem; margin-bottom: 10px; }
+  .history-log { background: var(--brown-100); border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; white-space: pre-wrap; line-height: 1.6; max-height: 260px; overflow-y: auto; }
   .disclaimer { font-size: 0.76rem; color: var(--gray-500); margin-top: 10px; }
   .loading, .error-state { text-align: center; padding: 40px 0; color: var(--gray-500); }
   .spinner {
@@ -133,16 +134,17 @@ function render(d) {
 
   if (d.awaitingAcceptance) {
     html += `<div class="card">
-      <h2>Solution proposée</h2>
-      <div class="accord-box">${esc(d.solutionProposee || "Voir avec votre magasin pour le détail.")}</div>
-      <label for="f-nom-signataire">Votre nom et prénom, pour valider votre accord</label>
+      <h2>Votre dossier est prêt à être clôturé</h2>
+      <p class="sub">Merci de vérifier les informations ci-dessous, puis de signer électroniquement pour confirmer. <strong>Le dossier ne sera clôturé qu'après votre signature.</strong></p>
+      ${d.solutionProposee ? `<div class="accord-box">${esc(d.solutionProposee)}</div>` : ""}
+      <label for="f-nom-signataire">Votre nom et prénom, pour signer</label>
       <input type="text" id="f-nom-signataire" placeholder="Prénom Nom">
-      <button type="button" class="btn-primary" id="btnAccepter">J'accepte cette solution</button>
-      <div class="disclaimer">En cliquant, vous confirmez être d'accord avec la solution proposée. La date, l'heure et cette validation sont enregistrées avec votre dossier.</div>
+      <button type="button" class="btn-primary" id="btnAccepter">Cliquez ici pour signer électroniquement</button>
+      <div class="disclaimer">En cliquant, vous confirmez que le dossier peut être clôturé. La date, l'heure et cette validation sont enregistrées avec votre dossier.</div>
       <div id="accepterMsg"></div>
     </div>`;
   } else if (d.alreadyAccepted) {
-    html += `<div class="card"><div class="banner ok">Vous avez déjà validé la solution proposée pour ce dossier. Merci !</div></div>`;
+    html += `<div class="card"><div class="banner ok" style="font-weight:700; text-align:center; font-size:1.05rem;">Dossier clôturé</div></div>`;
   }
 
   if (d.demandeComplement && !d.reponseClient) {
@@ -162,6 +164,10 @@ function render(d) {
 
   if (!d.awaitingAcceptance && !d.alreadyAccepted && !(d.demandeComplement && !d.reponseClient) && !d.reponseClient) {
     html += `<div class="card"><p class="sub" style="margin:0;">Aucune action n'est requise de votre part pour le moment. Revenez consulter ce lien pour suivre l'avancement de votre dossier.</p></div>`;
+  }
+
+  if (d.historique) {
+    html += `<div class="card"><h2>Échanges</h2><div class="history-log">${esc(d.historique)}</div></div>`;
   }
 
   app.innerHTML = html;
