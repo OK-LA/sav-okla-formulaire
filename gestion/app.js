@@ -219,11 +219,22 @@ function renderDetail(f) {
     html += `<div class="banner ok" style="font-weight:700; text-align:center; margin-bottom:16px;">✓ Dossier clôturé</div>`;
   }
 
+  if (f["Solution proposée"] || f["Numéro suivi"]) {
+    html += `<div class="panel"><h3>Résolution</h3>
+      <div class="kv-grid">
+        ${kv("Solution apportée", (f["Solution proposée"] || []).join(", "))}
+        ${kv("Numéro suivi", f["Numéro suivi"])}
+      </div>
+    </div>`;
+  }
+
   html += `<div class="panel"><h3>Déclaré par le client</h3>
     <div class="kv-grid">
       ${kv("Magasin", f["Magasin"])}
       ${kv("Référence produit", referenceAffichee)}
+      ${kv("Quantité achetée", f["Quantité achetée"])}
       ${kv("Pièce concernée", f["Pièce concernée"])}
+      ${kv("Unités concernées", f["Quantité concernée"])}
       ${kv("Nature du problème", f["Nature du problème constaté"])}
       ${kv("Date de la demande", f["Date de la demande"])}
       ${isFull ? kv("Date d'achat", f["date achat"]) : ""}

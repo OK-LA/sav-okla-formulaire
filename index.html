@@ -372,6 +372,13 @@
       </div>
 
       <div class="field">
+        <label class="required" for="f-quantite-achetee">Quantité achetée</label>
+        <input type="number" id="f-quantite-achetee" min="1" step="1" value="1" required>
+        <div class="hint">Ex. 6 si vous avez acheté un lot de 6 chaises.</div>
+        <div class="error-msg">Merci d'indiquer la quantité achetée.</div>
+      </div>
+
+      <div class="field">
         <label class="required" for="f-date-achat">Date d'achat</label>
         <input type="date" id="f-date-achat" required>
         <div class="error-msg">Merci de renseigner la date d'achat.</div>
@@ -419,6 +426,13 @@
         <label class="required" for="f-piece">Pièce concernée</label>
         <input type="text" id="f-piece" required placeholder="ex. accoudoir droit, pied arrière gauche...">
         <div class="error-msg">Merci d'indiquer la pièce concernée.</div>
+      </div>
+
+      <div class="field">
+        <label class="required" for="f-quantite-concernee">Combien d'unités sont concernées par ce problème ?</label>
+        <input type="number" id="f-quantite-concernee" min="1" step="1" value="1" required>
+        <div class="hint">Ex. 2 si seulement 2 des 6 chaises achetées ont le défaut.</div>
+        <div class="error-msg">Merci d'indiquer le nombre d'unités concernées.</div>
       </div>
 
       <div class="field">
@@ -741,6 +755,7 @@ function validateStep(n) {
   if (n === 2) {
     mark($("#f-magasin"), !!$("#f-magasin").value);
     mark($("#f-reference"), $("#f-reference").value.trim().length > 0);
+    mark($("#f-quantite-achetee"), Number($("#f-quantite-achetee").value) >= 1);
     mark($("#f-date-achat"), !!$("#f-date-achat").value);
     mark($("#f-date-livraison"), !!$("#f-date-livraison").value);
     mark($("#f-date-deballage"), !!$("#f-date-deballage").value);
@@ -752,6 +767,7 @@ function validateStep(n) {
 
   if (n === 3) {
     mark($("#f-piece"), $("#f-piece").value.trim().length > 0);
+    mark($("#f-quantite-concernee"), Number($("#f-quantite-concernee").value) >= 1);
     mark($("#f-nature"), !!$("#f-nature").value);
     mark($("#f-description"), $("#f-description").value.trim().length >= 20);
   }
@@ -780,6 +796,7 @@ function buildRecap() {
       <h3>Produit</h3>
       ${row("Magasin", $("#f-magasin").value)}
       ${row("Référence", $("#f-reference").value)}
+      ${row("Quantité achetée", $("#f-quantite-achetee").value)}
       ${row("Date d'achat", $("#f-date-achat").value)}
       ${row("Date de livraison", $("#f-date-livraison").value)}
       ${row("Date de déballage", $("#f-date-deballage").value)}
@@ -788,6 +805,7 @@ function buildRecap() {
     <div class="summary-block">
       <h3>Problème</h3>
       ${row("Pièce concernée", $("#f-piece").value)}
+      ${row("Unités concernées", $("#f-quantite-concernee").value)}
       ${row("Nature du problème", $("#f-nature").value)}
       ${row("Photos jointes", photos.length)}
     </div>
@@ -812,12 +830,14 @@ async function submitForm() {
     adresse: $("#f-adresse").value.trim(),
     magasin: $("#f-magasin").value,
     referenceProduit: $("#f-reference").value.trim(),
+    quantiteAchetee: Number($("#f-quantite-achetee").value),
     dateAchat: $("#f-date-achat").value,
     dateLivraison: $("#f-date-livraison").value,
     dateDeballage: $("#f-date-deballage").value,
     raisonDeballageTardif: $("#f-raison-deballage").value.trim(),
     montePar: $("#f-monte-par").value,
     pieceConcernee: $("#f-piece").value.trim(),
+    quantiteConcernee: Number($("#f-quantite-concernee").value),
     natureDuProbleme: $("#f-nature").value,
     trancheDePoids: $("#f-poids").value,
     description: $("#f-description").value.trim(),
@@ -868,8 +888,8 @@ $("#btnBack").addEventListener("click", () => {
 
 /* ===================== Brouillon local ===================== */
 const DRAFT_FIELDS = ["f-email","f-telephone","f-prenom","f-nom","f-adresse","f-magasin","f-reference",
-  "f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
-  "f-piece","f-nature","f-poids","f-description"];
+  "f-quantite-achetee","f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
+  "f-piece","f-quantite-concernee","f-nature","f-poids","f-description"];
 
 function saveDraft() {
   const data = {};
