@@ -51,6 +51,11 @@
   .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
   .photo-thumb { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; background: var(--gray-300); }
   .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .blur-badge {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(184,64,44,0.88); color: white;
+    font-size: 0.62rem; text-align: center; padding: 2px 3px;
+  }
   .photo-thumb .remove-btn {
     position: absolute; top: 4px; right: 4px; background: rgba(58,36,22,0.75); color: white;
     border-radius: 50%; width: 22px; height: 22px; font-size: 0.8rem; line-height: 1; padding: 0; border: none; cursor: pointer;
@@ -87,6 +92,42 @@ const params = new URLSearchParams(location.search);
 const token = params.get("token") || "";
 const $ = (sel, root) => (root || document).querySelector(sel);
 let photos = [];
+let hasSentThisSession = false;
+
+// Pré-filtre qualité non bloquant (variance du Laplacien pour le flou + luminosité moyenne +
+// résolution) — un avertissement affiché au client, jamais une décision automatique.
+function estimateImageWarnings(img) {
+  const w = 240;
+  const h = Math.round((img.height / img.width) * w) || 240;
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const gray = new Float32Array(w * h);
+  let brightnessSum = 0;
+  for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+    const g = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    gray[p] = g;
+    brightnessSum += g;
+  }
+  let sum = 0, sumSq = 0, n = 0;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = y * w + x;
+      const lap = 4 * gray[idx] - gray[idx - 1] - gray[idx + 1] - gray[idx - w] - gray[idx + w];
+      sum += lap; sumSq += lap * lap; n++;
+    }
+  }
+  const mean = sum / n;
+  const blurScore = sumSq / n - mean * mean;
+  const avgBrightness = brightnessSum / (w * h);
+  const warnings = [];
+  if (blurScore < 45) warnings.push("peut-être floue");
+  if (avgBrightness < 40) warnings.push("très sombre");
+  if (img.width < 400 || img.height < 400) warnings.push("résolution faible");
+  return warnings;
+}
 
 function resizeToDataUrl(img, maxDim, quality) {
   let { width, height } = img;
@@ -147,23 +188,20 @@ function render(d) {
     html += `<div class="card"><div class="banner ok" style="font-weight:700; text-align:center; font-size:1.05rem;">Dossier clôturé</div></div>`;
   }
 
-  if (d.demandeComplement && !d.reponseClient) {
-    html += `<div class="card">
-      <h2>Complément demandé</h2>
-      <div class="accord-box">${esc(d.demandeComplement)}</div>
-      <label for="f-message">Votre réponse</label>
-      <textarea id="f-message" placeholder="Écrivez votre réponse ici..."></textarea>
-      <div class="photo-drop" id="photoDrop">📷 Appuyez pour ajouter des photos<input type="file" id="f-photos" accept="image/*" multiple></div>
-      <div class="photo-grid" id="photoGrid"></div>
-      <button type="button" class="btn-primary" id="btnRepondre">Envoyer ma réponse</button>
-      <div id="repondreMsg"></div>
-    </div>`;
-  } else if (d.reponseClient) {
-    html += `<div class="card"><div class="banner ok">Votre réponse a bien été transmise à notre équipe.</div></div>`;
-  }
+  html += `<div class="card">
+    ${d.demandeComplement
+      ? `<h2>Complément demandé</h2><div class="accord-box">${esc(d.demandeComplement)}</div>`
+      : `<h2>Une question, une précision ?</h2><p class="sub" style="margin:0 0 4px;">Vous pouvez écrire à notre équipe à tout moment, autant de fois que nécessaire.</p>`}
+    <label for="f-message">Votre message</label>
+    <textarea id="f-message" placeholder="Écrivez votre message ici..."></textarea>
+    <div class="photo-drop" id="photoDrop">📷 Appuyez pour ajouter une ou plusieurs photos<input type="file" id="f-photos" accept="image/*" multiple></div>
+    <div class="photo-grid" id="photoGrid"></div>
+    <button type="button" class="btn-primary" id="btnRepondre">Envoyer</button>
+    <div id="repondreMsg"></div>
+  </div>`;
 
-  if (!d.awaitingAcceptance && !d.alreadyAccepted && !(d.demandeComplement && !d.reponseClient) && !d.reponseClient) {
-    html += `<div class="card"><p class="sub" style="margin:0;">Aucune action n'est requise de votre part pour le moment. Revenez consulter ce lien pour suivre l'avancement de votre dossier.</p></div>`;
+  if (hasSentThisSession) {
+    html += `<div class="card"><div class="banner ok">Votre dernier message a bien été transmis à notre équipe.</div></div>`;
   }
 
   if (d.historique) {
@@ -193,7 +231,12 @@ async function onPhotosChange(e) {
       im.onload = () => resolve(im);
       im.src = dataUrl;
     });
-    photos.push({ filename: file.name || `photo-${Date.now()}.jpg`, contentType: "image/jpeg", dataUrl: resizeToDataUrl(img, 1600, 0.82) });
+    photos.push({
+      filename: file.name || `photo-${Date.now()}.jpg`,
+      contentType: "image/jpeg",
+      dataUrl: resizeToDataUrl(img, 1600, 0.82),
+      warnings: estimateImageWarnings(img),
+    });
   }
   e.target.value = "";
   renderPhotos();
@@ -205,7 +248,7 @@ function renderPhotos() {
   photos.forEach((p, i) => {
     const div = document.createElement("div");
     div.className = "photo-thumb";
-    div.innerHTML = `<img src="${p.dataUrl}" alt=""><button type="button" class="remove-btn" data-idx="${i}">✕</button>`;
+    div.innerHTML = `<img src="${p.dataUrl}" alt=""><button type="button" class="remove-btn" data-idx="${i}">✕</button>${p.warnings && p.warnings.length ? `<div class="blur-badge">${esc(p.warnings.join(", "))}</div>` : ""}`;
     grid.appendChild(div);
   });
   grid.querySelectorAll(".remove-btn").forEach((btn) => {
@@ -247,11 +290,13 @@ async function submitRepondre() {
         photos: photos.map((p) => ({ filename: p.filename, contentType: p.contentType, base64: p.dataUrl.split(",")[1] })),
       }),
     });
+    photos = [];
+    hasSentThisSession = true;
     boot();
   } catch (e) {
     msg.innerHTML = `<div class="banner err">${e.message}</div>`;
     btn.disabled = false;
-    btn.textContent = "Envoyer ma réponse";
+    btn.textContent = "Envoyer";
   }
 }
 
