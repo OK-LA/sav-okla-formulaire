@@ -94,10 +94,9 @@ const $ = (sel, root) => (root || document).querySelector(sel);
 let photos = [];
 let video = null;
 let hasSentThisSession = false;
-// Airtable refuse tout fichier > 5 Mo sur l'endpoint d'upload utilisé ici ; on plafonne un peu
-// en dessous pour laisser de la marge (l'encodage base64 ne change pas cette limite, elle
-// s'applique au fichier réel).
-const VIDEO_MAX_BYTES = 4.5 * 1024 * 1024;
+// La vidéo est stockée sur Cloudflare R2 (pas l'endpoint d'upload direct Airtable, plafonné à
+// 5 Mo) : plafond surtout pensé pour éviter un envoi interminable en 4G, pas une limite d'API.
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 
 // Pré-filtre qualité non bloquant (variance du Laplacien pour le flou + luminosité moyenne +
 // résolution) — un avertissement affiché au client, jamais une décision automatique.
@@ -201,7 +200,7 @@ function render(d) {
     <textarea id="f-message" placeholder="Écrivez votre message ici..."></textarea>
     <div class="photo-drop" id="photoDrop">📷 Appuyez pour ajouter une ou plusieurs photos<input type="file" id="f-photos" accept="image/*" multiple></div>
     <div class="photo-grid" id="photoGrid"></div>
-    <div class="photo-drop" id="videoDrop">🎥 Appuyez pour ajouter une courte vidéo (5 Mo max)<input type="file" id="f-video" accept="video/*"></div>
+    <div class="photo-drop" id="videoDrop">🎥 Appuyez pour ajouter une vidéo (50 Mo max)<input type="file" id="f-video" accept="video/*"></div>
     <div id="videoPreview"></div>
     <div id="videoError" class="banner err" style="display:none;"></div>
     <button type="button" class="btn-primary" id="btnRepondre">Envoyer</button>
@@ -277,7 +276,7 @@ async function onVideoChange(e) {
   const errEl = $("#videoError");
   errEl.style.display = "none";
   if (file.size > VIDEO_MAX_BYTES) {
-    errEl.textContent = `Vidéo trop lourde (${formatMo(file.size)} Mo, limite 5 Mo) — filmez plus court ou en résolution plus basse.`;
+    errEl.textContent = `Vidéo trop lourde (${formatMo(file.size)} Mo, limite 50 Mo) — filmez plus court ou en résolution plus basse.`;
     errEl.style.display = "block";
     return;
   }
