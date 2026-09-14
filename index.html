@@ -371,6 +371,16 @@
         </div>
       </div>
 
+      <div id="canape-verif-box" class="field" style="display:none;">
+        <label class="required" for="f-canape-verif">Lors du retrait ou de la livraison, avez-vous vérifié l'état général du canapé ?</label>
+        <select id="f-canape-verif">
+          <option value="" disabled selected>Choisir</option>
+          <option>Oui</option>
+          <option>Non</option>
+        </select>
+        <div class="error-msg">Merci de répondre à cette question.</div>
+      </div>
+
       <div class="field">
         <label class="required" for="f-quantite-achetee">Quantité achetée</label>
         <input type="number" id="f-quantite-achetee" min="1" step="1" value="1" required>
@@ -629,12 +639,35 @@ $("#f-email").addEventListener("blur", tryLookup);
 $("#f-telephone").addEventListener("blur", tryLookup);
 
 /* ===================== Reconnaissance du produit par référence ===================== */
+let derniereReferenceNotifieeFournisseur = "";
+async function notifyRedirectFournisseur(reference, fournisseur) {
+  if (derniereReferenceNotifieeFournisseur === reference) return;
+  derniereReferenceNotifieeFournisseur = reference;
+  try {
+    await fetch(`${CONFIG.API_BASE}/api/redirect-fournisseur-notify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prenom: $("#f-prenom").value.trim(),
+        nom: $("#f-nom").value.trim(),
+        email: $("#f-email").value.trim(),
+        telephone: $("#f-telephone").value.trim(),
+        magasin: $("#f-magasin").value,
+        referenceProduit: reference,
+        fournisseur,
+      }),
+    });
+  } catch (e) { /* silencieux : ne doit jamais bloquer le client qu'on redirige */ }
+}
+
 async function tryProduitLookup() {
   const banner = $("#produit-reconnu");
   const redirectBanner = $("#produit-redirect");
+  const canapeBox = $("#canape-verif-box");
   const reference = $("#f-reference").value.trim();
   banner.style.display = "none";
   redirectBanner.style.display = "none";
+  canapeBox.style.display = "none";
   if (!reference) return;
   if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
   try {
@@ -649,6 +682,10 @@ async function tryProduitLookup() {
       $("#produit-redirect-text").textContent = `Ce produit est distribué par ${data.redirect.fournisseur}, qui gère directement son propre SAV. Pour un traitement plus rapide, faites votre demande sur leur site :`;
       $("#produit-redirect-link").href = data.redirect.url;
       redirectBanner.style.display = "block";
+      notifyRedirectFournisseur(reference, data.redirect.fournisseur);
+    }
+    if (data.isCanape) {
+      canapeBox.style.display = "block";
     }
   } catch (e) { /* silencieux : confort uniquement, ne bloque jamais la saisie */ }
 }
@@ -777,6 +814,9 @@ function validateStep(n) {
     if ($("#deballage-tardif-box").style.display === "block") {
       mark($("#f-raison-deballage"), $("#f-raison-deballage").value.trim().length > 0);
     }
+    if ($("#canape-verif-box").style.display === "block") {
+      mark($("#f-canape-verif"), !!$("#f-canape-verif").value);
+    }
   }
 
   if (n === 3) {
@@ -815,6 +855,7 @@ function buildRecap() {
       ${row("Date de livraison", $("#f-date-livraison").value)}
       ${row("Date de déballage", $("#f-date-deballage").value)}
       ${row("Monté par", $("#f-monte-par").value)}
+      ${$("#canape-verif-box").style.display === "block" ? row("État du canapé vérifié au retrait/à la livraison", $("#f-canape-verif").value) : ""}
     </div>
     <div class="summary-block">
       <h3>Problème</h3>
@@ -854,6 +895,7 @@ async function submitForm() {
     quantiteConcernee: Number($("#f-quantite-concernee").value),
     natureDuProbleme: $("#f-nature").value,
     trancheDePoids: $("#f-poids").value,
+    verificationEtatCanape: $("#f-canape-verif").value,
     description: $("#f-description").value.trim(),
     photos: photos.map((p) => ({
       filename: p.filename,
@@ -903,7 +945,7 @@ $("#btnBack").addEventListener("click", () => {
 /* ===================== Brouillon local ===================== */
 const DRAFT_FIELDS = ["f-email","f-telephone","f-prenom","f-nom","f-adresse","f-magasin","f-reference",
   "f-quantite-achetee","f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
-  "f-piece","f-quantite-concernee","f-nature","f-poids","f-description"];
+  "f-piece","f-quantite-concernee","f-nature","f-poids","f-canape-verif","f-description"];
 
 function saveDraft() {
   const data = {};
@@ -918,6 +960,7 @@ function restoreDraft() {
     DRAFT_FIELDS.forEach((id) => { if (data[id]) $("#" + id).value = data[id]; });
     refreshDeballageTardif();
     refreshAffaissement();
+    if ($("#f-reference").value.trim()) tryProduitLookup();
   } catch (e) { /* brouillon corrompu, on ignore */ }
 }
 document.addEventListener("input", () => saveDraft());
