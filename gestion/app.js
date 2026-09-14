@@ -238,6 +238,7 @@ function renderDetail(f) {
       ${kv("Nature du problème", f["Nature du problème constaté"])}
       ${kv("Date de la demande", f["Date de la demande"])}
       ${isFull ? kv("Date d'achat", f["date achat"]) : ""}
+      ${isFull ? kv("Numéro de facture", f["Numéro de facture"]) : ""}
       ${isFull ? kv("Date de livraison", f["Date de livraison"]) : ""}
       ${isFull ? kv("Date de déballage/montage", f["Date de déballage/montage"]) : ""}
       ${isFull ? kv("Monté par", f["Produit monté par vous ou livré déjà monté ?"]) : ""}

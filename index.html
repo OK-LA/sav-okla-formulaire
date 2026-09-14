@@ -395,6 +395,12 @@
       </div>
 
       <div class="field">
+        <label for="f-numero-facture">Numéro de facture</label>
+        <input type="text" id="f-numero-facture">
+        <div class="hint">Facultatif — indiqué sur votre facture, ça accélère le traitement de votre dossier.</div>
+      </div>
+
+      <div class="field">
         <label class="required" for="f-date-livraison">Date de livraison</label>
         <input type="date" id="f-date-livraison" required>
         <div class="error-msg">Merci de renseigner la date de livraison.</div>
@@ -852,6 +858,7 @@ function buildRecap() {
       ${row("Référence", $("#f-reference").value)}
       ${row("Quantité achetée", $("#f-quantite-achetee").value)}
       ${row("Date d'achat", $("#f-date-achat").value)}
+      ${row("Numéro de facture", $("#f-numero-facture").value)}
       ${row("Date de livraison", $("#f-date-livraison").value)}
       ${row("Date de déballage", $("#f-date-deballage").value)}
       ${row("Monté par", $("#f-monte-par").value)}
@@ -887,6 +894,7 @@ async function submitForm() {
     referenceProduit: $("#f-reference").value.trim(),
     quantiteAchetee: Number($("#f-quantite-achetee").value),
     dateAchat: $("#f-date-achat").value,
+    numeroFacture: $("#f-numero-facture").value.trim(),
     dateLivraison: $("#f-date-livraison").value,
     dateDeballage: $("#f-date-deballage").value,
     raisonDeballageTardif: $("#f-raison-deballage").value.trim(),
@@ -944,7 +952,7 @@ $("#btnBack").addEventListener("click", () => {
 
 /* ===================== Brouillon local ===================== */
 const DRAFT_FIELDS = ["f-email","f-telephone","f-prenom","f-nom","f-adresse","f-magasin","f-reference",
-  "f-quantite-achetee","f-date-achat","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
+  "f-quantite-achetee","f-date-achat","f-numero-facture","f-date-livraison","f-date-deballage","f-raison-deballage","f-monte-par",
   "f-piece","f-quantite-concernee","f-nature","f-poids","f-canape-verif","f-description"];
 
 function saveDraft() {
