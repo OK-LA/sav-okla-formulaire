@@ -10,7 +10,7 @@ const ROLE_KEY = `sav-okla-${APP_KEY}-role`;
 // (prénom + magasin) pour signer les messages du fil interne, sinon Émilie reçoit des messages
 // anonymes sans savoir à qui répondre.
 const IDENTITE_KEY = "sav-okla-magasin-identite";
-const MAGASINS = ["Ham", "Longueau", "Breteuil", "Roye", "Entrepôt", "Achat internet"];
+const MAGASINS = ["Ham", "Longueau", "Breteuil", "Roye", "OK-AZ", "Entrepôt", "Achat internet"];
 function getIdentiteMagasin() {
   try { return JSON.parse(localStorage.getItem(IDENTITE_KEY)) || { nom: "", magasin: "" }; }
   catch (e) { return { nom: "", magasin: "" }; }
