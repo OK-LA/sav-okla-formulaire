@@ -6,6 +6,21 @@ const APP_KEY = location.pathname.includes("/magasin/") ? "magasin" : "gestion";
 const TOKEN_KEY = `sav-okla-${APP_KEY}-token`;
 const ROLE_KEY = `sav-okla-${APP_KEY}-role`;
 
+// Le mot de passe magasin est partagé par les 4 sites : on mémorise sur l'appareil qui écrit
+// (prénom + magasin) pour signer les messages du fil interne, sinon Émilie reçoit des messages
+// anonymes sans savoir à qui répondre.
+const IDENTITE_KEY = "sav-okla-magasin-identite";
+const MAGASINS = ["Ham", "Longueau", "Breteuil", "Roye", "Entrepôt", "Achat internet"];
+function getIdentiteMagasin() {
+  try { return JSON.parse(localStorage.getItem(IDENTITE_KEY)) || { nom: "", magasin: "" }; }
+  catch (e) { return { nom: "", magasin: "" }; }
+}
+function setIdentiteMagasin(nom, magasin) {
+  try { localStorage.setItem(IDENTITE_KEY, JSON.stringify({ nom, magasin })); } catch (e) { /* mode privé */ }
+}
+// Valeur du champ Airtable « Message interne à lire par » qui signale un message non lu pour MOI.
+function interneAttendu() { return state.role === "full" ? "Émilie" : "Magasin"; }
+
 // Récupérés en direct depuis Airtable au login (voir loadChoices) plutôt que recopiés en
 // dur ici — un accent ou une apostrophe typographique mal recopiée ferait échouer un
 // enregistrement silencieusement côté serveur (l'option n'existerait pas pour Airtable).
@@ -150,6 +165,7 @@ function renderDossierRow(r) {
     <span class="client-name">${esc(f["Référence dossier"] || "")}</span>
     <span class="magasin">${magasin}</span>
     <span class="nature">${f["Nature du problème constaté"] || ""}</span>
+    ${f["Message interne à lire par"] === interneAttendu() ? '<span class="status-pill interne">💬 message interne</span>' : ""}
     ${f["Accord client - preuve"] ? '<span class="status-pill done">✓ Clôturé</span>' : ""}
     <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
   `;
@@ -193,6 +209,11 @@ async function openDossier(id) {
   try {
     const data = await api(`/api/gestion/dossiers/${id}`);
     renderDetail(data.fields);
+    // Le voyant « non lu » s'éteint à la lecture. Le serveur ignore la demande si le message
+    // attendait l'autre rôle, donc un passage d'Émilie n'efface pas un message du magasin.
+    if (data.fields["Message interne à lire par"] === interneAttendu()) {
+      api(`/api/gestion/dossiers/${id}/interne/lu`, { method: "POST" }).catch(() => {});
+    }
   } catch (e) {
     $("#detailView").innerHTML = `<div class="detail-backlink" id="backlink">&larr; Retour à la liste</div><div class="empty-state">${e.message}</div>`;
     $("#backlink").addEventListener("click", showList);
@@ -279,6 +300,20 @@ function renderDetail(f) {
     ${f["Lien suivi client"] ? `<div class="kv" style="margin-top:14px;"><div class="k">Lien du portail client</div><div class="v"><a href="${esc(f["Lien suivi client"])}" target="_blank" rel="noopener">${esc(f["Lien suivi client"])}</a></div></div>` : ""}
   </div>`;
 
+  const interne = f["Échanges internes"];
+  const identite = getIdentiteMagasin();
+  const cible = isFull ? "au magasin" : "à Émilie";
+  html += `<div class="panel panel-interne"><h3>💬 Échanges internes — Émilie ↔ magasin</h3>
+    <p class="sub" style="margin:-6px 0 12px;">Fil réservé à l'équipe : le client ne le voit jamais.</p>
+    ${interne ? `<div class="history-log interne">${esc(interne)}</div>` : `<p class="sub" style="margin:0 0 14px;">Aucun message interne pour l'instant.</p>`}
+    ${isFull ? "" : `<div class="edit-grid">
+      <div class="field"><label for="f-internenom">Votre prénom</label><input type="text" id="f-internenom" value="${esc(identite.nom)}" placeholder="Ex. Julie"></div>
+      <div class="field"><label for="f-internemagasin">Votre magasin</label><select id="f-internemagasin"><option value="">— à choisir —</option>${MAGASINS.map((m) => `<option ${m === identite.magasin ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></div>
+    </div>`}
+    <div class="field" style="margin-top:14px;"><label for="f-messageinterne">Nouveau message ${cible}</label><textarea id="f-messageinterne" placeholder="${isFull ? "Ex. Changer la pièce 5 et faire un avoir de 10 €." : "Ex. Pièce changée, avoir remis au client."}"></textarea></div>
+    <div class="save-row"><span class="save-msg" id="saveMsgInterne"></span><button type="button" id="btnSendInterne">Envoyer ${cible}</button></div>
+  </div>`;
+
   html += `<div class="panel"><h3>Clôture (magasin)</h3>
     <div class="edit-grid">
       <div class="field"><label for="f-statutclient">Statut Client</label>${selectHtml("f-statutclient", STATUT_CLIENT_CHOICES, f["Statut Client"])}</div>
@@ -294,6 +329,37 @@ function renderDetail(f) {
   if (isFull) $("#btnSaveFull").addEventListener("click", saveFullSection);
   if (isFull) $("#btnSendMessage").addEventListener("click", sendMessage);
   $("#btnSaveMagasin").addEventListener("click", saveMagasinSection);
+  $("#btnSendInterne").addEventListener("click", sendInterne);
+}
+
+// Fil interne : les deux rôles peuvent écrire (contrairement au message client, réservé à Émilie).
+async function sendInterne() {
+  const btn = $("#btnSendInterne");
+  const msgEl = $("#saveMsgInterne");
+  const message = $("#f-messageinterne").value.trim();
+  msgEl.textContent = ""; msgEl.className = "save-msg";
+  if (!message) { msgEl.textContent = "Écrivez un message avant d'envoyer."; msgEl.classList.add("err"); return; }
+
+  const payload = { message };
+  if (state.role !== "full") {
+    const nom = $("#f-internenom").value.trim();
+    const magasin = $("#f-internemagasin").value;
+    if (!nom || !magasin) { msgEl.textContent = "Indiquez votre prénom et votre magasin avant d'envoyer."; msgEl.classList.add("err"); return; }
+    setIdentiteMagasin(nom, magasin);
+    payload.auteur = `${magasin} – ${nom}`;
+  }
+
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Envoi…';
+  try {
+    await api(`/api/gestion/dossiers/${state.currentId}/interne`, { method: "POST", body: JSON.stringify(payload) });
+    openDossier(state.currentId);
+  } catch (e) {
+    msgEl.textContent = e.message; msgEl.classList.add("err");
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
 }
 
 async function sendMessage() {
