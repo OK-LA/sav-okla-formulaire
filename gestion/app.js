@@ -43,6 +43,10 @@ async function loadChoices() {
 /* ===================== State ===================== */
 let state = { token: localStorage.getItem(TOKEN_KEY) || "", role: localStorage.getItem(ROLE_KEY) || "", offset: null, currentId: null };
 
+// Lien direct depuis un email (?dossier=recXXXXXXXXXXXXXXX) : ouvre ce dossier précis une fois
+// connecté, au lieu de la liste. Reste dans l'URL, donc un rechargement rouvre le même dossier.
+const pendingDossierId = new URLSearchParams(location.search).get("dossier");
+
 const $ = (sel, root) => (root || document).querySelector(sel);
 
 /* ===================== API ===================== */
@@ -79,7 +83,7 @@ async function showLoggedIn() {
   badge.textContent = state.role === "full" ? "Accès complet" : "Magasin";
   badge.classList.remove("hidden");
   await loadChoices();
-  showList();
+  if (pendingDossierId) { openDossier(pendingDossierId); } else { showList(); }
 }
 function logout() {
   state.token = ""; state.role = "";
