@@ -306,13 +306,13 @@
 
       <div class="field">
         <label class="required" for="f-prenom">Prénom</label>
-        <input type="text" id="f-prenom" required>
+        <input type="text" id="f-prenom" required maxlength="30">
         <div class="error-msg">Merci de renseigner votre prénom.</div>
       </div>
 
       <div class="field">
         <label class="required" for="f-nom">Nom</label>
-        <input type="text" id="f-nom" required>
+        <input type="text" id="f-nom" required maxlength="30">
         <div class="error-msg">Merci de renseigner votre nom.</div>
       </div>
 
@@ -362,9 +362,9 @@
 
       <div class="field">
         <label class="required" for="f-reference">Référence du produit</label>
-        <input type="text" id="f-reference" required>
+        <input type="text" id="f-reference" required maxlength="30">
         <div class="hint">Indiquée sur votre facture ou sur l'étiquette du produit.</div>
-        <div class="error-msg">Merci de renseigner la référence du produit.</div>
+        <div class="error-msg" id="reference-error">Merci de renseigner la référence du produit.</div>
         <div class="banner" id="produit-reconnu" style="display:none; background: var(--brown-100); color: var(--brown-700); border: 1px solid var(--gray-300); margin-top: 8px;"></div>
         <div class="banner warn" id="produit-redirect" style="display:none; margin-top: 8px;">
           <span id="produit-redirect-text"></span>
@@ -397,7 +397,7 @@
 
       <div class="field">
         <label for="f-numero-facture">Numéro de facture</label>
-        <input type="text" id="f-numero-facture">
+        <input type="text" id="f-numero-facture" maxlength="30">
         <div class="hint">Facultatif — indiqué sur votre facture, ça accélère le traitement de votre dossier.</div>
       </div>
 
@@ -441,7 +441,7 @@
 
       <div class="field">
         <label class="required" for="f-piece">Pièce concernée</label>
-        <input type="text" id="f-piece" required placeholder="ex. accoudoir droit, pied arrière gauche...">
+        <input type="text" id="f-piece" required maxlength="30" placeholder="ex. accoudoir droit, pied arrière gauche...">
         <div class="error-msg">Merci d'indiquer la pièce concernée.</div>
       </div>
 
@@ -646,6 +646,10 @@ $("#f-email").addEventListener("blur", tryLookup);
 $("#f-telephone").addEventListener("blur", tryLookup);
 
 /* ===================== Reconnaissance du produit par référence ===================== */
+// null = pas encore vérifié pour la valeur actuelle, true = accepté (trouvé dans le tableau
+// tarif, ou redirigé vers un fournisseur qui gère son propre SAV), false = référence inconnue,
+// bloque le passage à l'étape suivante.
+let referenceValidee = null;
 let derniereReferenceNotifieeFournisseur = "";
 async function notifyRedirectFournisseur(reference, fournisseur) {
   if (derniereReferenceNotifieeFournisseur === reference) return;
@@ -671,12 +675,14 @@ async function tryProduitLookup() {
   const banner = $("#produit-reconnu");
   const redirectBanner = $("#produit-redirect");
   const canapeBox = $("#canape-verif-box");
+  const referenceField = $("#f-reference").closest(".field");
+  const referenceError = $("#reference-error");
   const reference = $("#f-reference").value.trim();
   banner.style.display = "none";
   redirectBanner.style.display = "none";
   canapeBox.style.display = "none";
-  if (!reference) return;
-  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
+  if (!reference) { referenceValidee = null; return; }
+  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) { referenceValidee = true; return; }
   try {
     const qs = new URLSearchParams({ reference });
     const res = await fetch(`${CONFIG.API_BASE}/api/produit-lookup?${qs.toString()}`);
@@ -694,9 +700,25 @@ async function tryProduitLookup() {
     if (data.isCanape) {
       canapeBox.style.display = "block";
     }
-  } catch (e) { /* silencieux : confort uniquement, ne bloque jamais la saisie */ }
+    // Accepté si trouvé dans le tableau tarif, ou reconnu comme redirection fournisseur.
+    // Sinon référence inconnue : on bloque la suite tant qu'elle n'est pas corrigée.
+    referenceValidee = !!(data.found || data.redirect);
+    if (!referenceValidee) {
+      referenceError.textContent = "Cette référence n'a pas été reconnue dans notre catalogue. Vérifiez l'orthographe, ou contactez votre magasin si elle est correcte.";
+      if (referenceField) setInvalid(referenceField, true);
+    } else if (referenceField) {
+      setInvalid(referenceField, false);
+    }
+  } catch (e) {
+    // Panne du service de reconnaissance : on ne pénalise pas le client pour notre erreur.
+    referenceValidee = true;
+  }
 }
 $("#f-reference").addEventListener("blur", tryProduitLookup);
+$("#f-reference").addEventListener("input", () => {
+  referenceValidee = null;
+  $("#reference-error").textContent = "Merci de renseigner la référence du produit.";
+});
 
 /* ===================== Photos : compression + détection de flou ===================== */
 $("#photoDrop").addEventListener("click", () => $("#f-photos").click());
@@ -812,7 +834,7 @@ function validateStep(n) {
 
   if (n === 2) {
     mark($("#f-magasin"), !!$("#f-magasin").value);
-    mark($("#f-reference"), $("#f-reference").value.trim().length > 0);
+    mark($("#f-reference"), $("#f-reference").value.trim().length > 0 && referenceValidee !== false);
     mark($("#f-quantite-achetee"), Number($("#f-quantite-achetee").value) >= 1);
     mark($("#f-date-achat"), !!$("#f-date-achat").value);
     mark($("#f-date-livraison"), !!$("#f-date-livraison").value);
@@ -938,7 +960,15 @@ async function submitForm() {
 }
 
 /* ===================== Navigation ===================== */
-$("#btnNext").addEventListener("click", () => {
+$("#btnNext").addEventListener("click", async () => {
+  // La vérification se déclenche normalement au blur du champ référence ; si l'utilisateur
+  // clique directement sur Continuer sans en sortir, on l'attend avant de valider l'étape.
+  if (currentStep === 2 && referenceValidee === null && $("#f-reference").value.trim()) {
+    const btn = $("#btnNext");
+    btn.disabled = true;
+    await tryProduitLookup();
+    btn.disabled = false;
+  }
   if (!validateStep(currentStep)) return;
   if (currentStep === 5) { submitForm(); return; }
   const next = currentStep + 1;
