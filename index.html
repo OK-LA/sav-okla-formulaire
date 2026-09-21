@@ -646,10 +646,9 @@ $("#f-email").addEventListener("blur", tryLookup);
 $("#f-telephone").addEventListener("blur", tryLookup);
 
 /* ===================== Reconnaissance du produit par référence ===================== */
-// null = pas encore vérifié pour la valeur actuelle, true = accepté (trouvé dans le tableau
-// tarif, ou redirigé vers un fournisseur qui gère son propre SAV), false = référence inconnue,
-// bloque le passage à l'étape suivante.
-let referenceValidee = null;
+// Purement informatif pour l'instant (bannière), ne bloque pas l'envoi : la table utilisée
+// par /api/produit-lookup n'est pas un vrai tableau tarif exhaustif (à corriger côté Worker
+// avant de pouvoir bloquer sans risquer de rejeter des références légitimes).
 let derniereReferenceNotifieeFournisseur = "";
 async function notifyRedirectFournisseur(reference, fournisseur) {
   if (derniereReferenceNotifieeFournisseur === reference) return;
@@ -675,14 +674,12 @@ async function tryProduitLookup() {
   const banner = $("#produit-reconnu");
   const redirectBanner = $("#produit-redirect");
   const canapeBox = $("#canape-verif-box");
-  const referenceField = $("#f-reference").closest(".field");
-  const referenceError = $("#reference-error");
   const reference = $("#f-reference").value.trim();
   banner.style.display = "none";
   redirectBanner.style.display = "none";
   canapeBox.style.display = "none";
-  if (!reference) { referenceValidee = null; return; }
-  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) { referenceValidee = true; return; }
+  if (!reference) return;
+  if (!CONFIG.API_BASE || CONFIG.API_BASE.includes("REPLACE-ME")) return;
   try {
     const qs = new URLSearchParams({ reference });
     const res = await fetch(`${CONFIG.API_BASE}/api/produit-lookup?${qs.toString()}`);
@@ -700,25 +697,9 @@ async function tryProduitLookup() {
     if (data.isCanape) {
       canapeBox.style.display = "block";
     }
-    // Accepté si trouvé dans le tableau tarif, ou reconnu comme redirection fournisseur.
-    // Sinon référence inconnue : on bloque la suite tant qu'elle n'est pas corrigée.
-    referenceValidee = !!(data.found || data.redirect);
-    if (!referenceValidee) {
-      referenceError.textContent = "Cette référence n'a pas été reconnue dans notre catalogue. Vérifiez l'orthographe, ou contactez votre magasin si elle est correcte.";
-      if (referenceField) setInvalid(referenceField, true);
-    } else if (referenceField) {
-      setInvalid(referenceField, false);
-    }
-  } catch (e) {
-    // Panne du service de reconnaissance : on ne pénalise pas le client pour notre erreur.
-    referenceValidee = true;
-  }
+  } catch (e) { /* silencieux : confort uniquement, ne bloque jamais la saisie */ }
 }
 $("#f-reference").addEventListener("blur", tryProduitLookup);
-$("#f-reference").addEventListener("input", () => {
-  referenceValidee = null;
-  $("#reference-error").textContent = "Merci de renseigner la référence du produit.";
-});
 
 /* ===================== Photos : compression + détection de flou ===================== */
 $("#photoDrop").addEventListener("click", () => $("#f-photos").click());
@@ -834,7 +815,7 @@ function validateStep(n) {
 
   if (n === 2) {
     mark($("#f-magasin"), !!$("#f-magasin").value);
-    mark($("#f-reference"), $("#f-reference").value.trim().length > 0 && referenceValidee !== false);
+    mark($("#f-reference"), $("#f-reference").value.trim().length > 0);
     mark($("#f-quantite-achetee"), Number($("#f-quantite-achetee").value) >= 1);
     mark($("#f-date-achat"), !!$("#f-date-achat").value);
     mark($("#f-date-livraison"), !!$("#f-date-livraison").value);
@@ -960,15 +941,7 @@ async function submitForm() {
 }
 
 /* ===================== Navigation ===================== */
-$("#btnNext").addEventListener("click", async () => {
-  // La vérification se déclenche normalement au blur du champ référence ; si l'utilisateur
-  // clique directement sur Continuer sans en sortir, on l'attend avant de valider l'étape.
-  if (currentStep === 2 && referenceValidee === null && $("#f-reference").value.trim()) {
-    const btn = $("#btnNext");
-    btn.disabled = true;
-    await tryProduitLookup();
-    btn.disabled = false;
-  }
+$("#btnNext").addEventListener("click", () => {
   if (!validateStep(currentStep)) return;
   if (currentStep === 5) { submitForm(); return; }
   const next = currentStep + 1;
