@@ -122,6 +122,12 @@
   }
   textarea { min-height: 100px; resize: vertical; }
   .hint { font-size: 0.78rem; color: var(--gray-500); margin-top: 4px; }
+  .reference-example { margin-top: 8px; }
+  .reference-example img {
+    display: block; max-width: 100%; border: 1.5px solid var(--gray-300);
+    border-radius: 8px;
+  }
+  .reference-example .caption { font-size: 0.78rem; color: var(--gray-500); margin-top: 4px; }
   .error-msg {
     font-size: 0.8rem;
     color: var(--red);
@@ -364,6 +370,10 @@
         <label class="required" for="f-reference">Référence du produit</label>
         <input type="text" id="f-reference" required maxlength="30">
         <div class="hint">Indiquée sur votre facture ou sur l'étiquette du produit.</div>
+        <div class="reference-example">
+          <img src="exemple-reference.jpg" alt="Exemple : colonne Référence sur une facture OK-LA" loading="lazy">
+          <div class="caption">Exemple : la référence à recopier (ici « PAUILLAC-STORE-3M »), trouvable sur votre facture.</div>
+        </div>
         <div class="error-msg" id="reference-error">Merci de renseigner la référence du produit.</div>
         <div class="banner" id="produit-reconnu" style="display:none; background: var(--brown-100); color: var(--brown-700); border: 1px solid var(--gray-300); margin-top: 8px;"></div>
         <div class="banner warn" id="produit-redirect" style="display:none; margin-top: 8px;">
