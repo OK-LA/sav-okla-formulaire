@@ -165,8 +165,8 @@ function renderDossierRow(r) {
   const magasin = Array.isArray(f["Magasin"]) ? f["Magasin"].join(", ") : (f["Magasin"] || "");
   const statut = f["Claim Status"] || "";
   div.innerHTML = `
-    <span class="claim-id">${esc(nomAffiche)}</span>
-    <span class="client-name">${esc(f["Référence dossier"] || "")}</span>
+    <span class="claim-id">${esc(f["Référence dossier"] || "")}</span>
+    <span class="client-name">${esc(nomAffiche)}</span>
     <span class="magasin">${magasin}</span>
     <span class="nature">${f["Nature du problème constaté"] || ""}</span>
     ${f["Message interne à lire par"] === interneAttendu() ? '<span class="status-pill interne">💬 message interne</span>' : ""}

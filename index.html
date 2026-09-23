@@ -231,7 +231,13 @@
     aspect-ratio: 1;
     background: var(--gray-300);
   }
-  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb img, .photo-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-thumb .video-placeholder {
+    width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; color: var(--brown-700); background: var(--brown-100);
+    font-size: 0.7rem; text-align: center; padding: 6px; word-break: break-word;
+  }
+  .photo-thumb .video-placeholder .icon { font-size: 1.6rem; }
   .photo-thumb .remove-btn {
     position: absolute; top: 4px; right: 4px;
     background: rgba(58,36,22,0.75); color: white;
@@ -528,12 +534,13 @@
       </div>
 
       <div class="photo-drop" id="photoDrop">
-        📷 Appuyez pour ajouter des photos
-        <input type="file" id="f-photos" accept="image/*" multiple>
+        📷 Appuyez pour ajouter des photos ou vidéos
+        <input type="file" id="f-photos" accept="image/*,video/*" multiple>
       </div>
       <div class="photo-count" id="photoCount">0 photo ajoutée (2 minimum)</div>
       <div class="photo-grid" id="photoGrid"></div>
       <div class="error-msg" id="photos-error" style="display:none; margin-top:8px;">Merci d'ajouter au moins 2 photos (vue d'ensemble + gros plan).</div>
+      <div class="error-msg" id="video-error" style="display:none; margin-top:8px;"></div>
     </section>
 
     <!-- STEP 5 : RECAP -->
@@ -576,7 +583,8 @@ const DRAFT_KEY = "sav-okla-draft-v1";
 /* ===================== State ===================== */
 let currentStep = 0;
 const TOTAL_STEPS = 6; // steps 0..5, step 6 = confirmation (not counted in progress)
-let photos = []; // {filename, contentType, dataUrl, base64, isBlurry}
+let photos = []; // images: {kind:"image", filename, contentType, dataUrl, isBlurry}; vidéos: {kind:"video", filename, contentType, dataUrl}
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // même plafond que le portail de suivi (stockage R2)
 
 /* ===================== Helpers ===================== */
 const $ = (sel) => document.querySelector(sel);
@@ -752,17 +760,26 @@ function resizeToDataUrl(img, maxDim, quality) {
   return c.toDataURL("image/jpeg", quality);
 }
 
+function imageCount() { return photos.filter((p) => p.kind !== "video").length; }
+
 function renderPhotos() {
   const grid = $("#photoGrid");
   grid.innerHTML = "";
   photos.forEach((p, i) => {
     const div = document.createElement("div");
     div.className = "photo-thumb";
-    div.innerHTML = `
-      <img src="${p.dataUrl}" alt="Photo ${i + 1}">
-      <button type="button" class="remove-btn" data-idx="${i}">✕</button>
-      ${p.isBlurry ? '<div class="blur-badge">Peut-être floue</div>' : ""}
-    `;
+    if (p.kind === "video") {
+      div.innerHTML = `
+        <div class="video-placeholder"><span class="icon">🎥</span><span>${esc(p.filename)}</span></div>
+        <button type="button" class="remove-btn" data-idx="${i}">✕</button>
+      `;
+    } else {
+      div.innerHTML = `
+        <img src="${p.dataUrl}" alt="Photo ${i + 1}">
+        <button type="button" class="remove-btn" data-idx="${i}">✕</button>
+        ${p.isBlurry ? '<div class="blur-badge">Peut-être floue</div>' : ""}
+      `;
+    }
     grid.appendChild(div);
   });
   grid.querySelectorAll(".remove-btn").forEach((btn) => {
@@ -771,12 +788,36 @@ function renderPhotos() {
       renderPhotos();
     });
   });
-  $("#photoCount").textContent = `${photos.length} photo${photos.length > 1 ? "s" : ""} ajoutée${photos.length > 1 ? "s" : ""} (2 minimum)`;
+  const n = imageCount();
+  $("#photoCount").textContent = `${n} photo${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""} (2 minimum)`;
 }
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 $("#f-photos").addEventListener("change", async (e) => {
   const files = Array.from(e.target.files || []);
+  const videoError = $("#video-error");
+  videoError.style.display = "none";
   for (const file of files) {
+    if (file.type.startsWith("video/")) {
+      if (file.size > VIDEO_MAX_BYTES) {
+        videoError.textContent = `Vidéo "${file.name}" trop lourde (limite 50 Mo) — merci de la compresser ou d'en choisir une autre.`;
+        videoError.style.display = "block";
+        continue;
+      }
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      photos.push({
+        kind: "video",
+        filename: file.name || `video-${Date.now()}.mp4`,
+        contentType: file.type || "video/mp4",
+        dataUrl,
+      });
+      continue;
+    }
     const dataUrl = await new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -790,6 +831,7 @@ $("#f-photos").addEventListener("change", async (e) => {
     const blurScore = estimateBlurScore(img);
     const resized = resizeToDataUrl(img, 1600, 0.82);
     photos.push({
+      kind: "image",
       filename: file.name || `photo-${Date.now()}.jpg`,
       contentType: "image/jpeg",
       dataUrl: resized,
@@ -798,7 +840,7 @@ $("#f-photos").addEventListener("change", async (e) => {
   }
   e.target.value = "";
   renderPhotos();
-  if (photos.length >= 2) $("#photos-error").style.display = "none";
+  if (imageCount() >= 2) $("#photos-error").style.display = "none";
 });
 
 /* ===================== Validation par étape ===================== */
@@ -847,7 +889,7 @@ function validateStep(n) {
   }
 
   if (n === 4) {
-    const enough = photos.length >= 2;
+    const enough = imageCount() >= 2;
     $("#photos-error").style.display = enough ? "none" : "block";
     ok = enough;
   }
@@ -883,7 +925,8 @@ function buildRecap() {
       ${row("Pièce concernée", $("#f-piece").value)}
       ${row("Unités concernées", $("#f-quantite-concernee").value)}
       ${row("Nature du problème", $("#f-nature").value)}
-      ${row("Photos jointes", photos.length)}
+      ${row("Photos jointes", imageCount())}
+      ${photos.some((p) => p.kind === "video") ? row("Vidéos jointes", photos.filter((p) => p.kind === "video").length) : ""}
     </div>
   `;
   $("#recapContent").innerHTML = html;
@@ -919,7 +962,12 @@ async function submitForm() {
     trancheDePoids: $("#f-poids").value,
     verificationEtatCanape: $("#f-canape-verif").value,
     description: $("#f-description").value.trim(),
-    photos: photos.map((p) => ({
+    photos: photos.filter((p) => p.kind !== "video").map((p) => ({
+      filename: p.filename,
+      contentType: p.contentType,
+      base64: p.dataUrl.split(",")[1],
+    })),
+    videos: photos.filter((p) => p.kind === "video").map((p) => ({
       filename: p.filename,
       contentType: p.contentType,
       base64: p.dataUrl.split(",")[1],
