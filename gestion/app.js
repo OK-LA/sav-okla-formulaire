@@ -168,7 +168,7 @@ function renderDossierRow(r) {
     <span class="claim-id">${esc(f["Référence dossier"] || "")}</span>
     <span class="client-name">${esc(nomAffiche)}</span>
     <span class="magasin">${magasin}</span>
-    <span class="nature">${f["Nature du problème constaté"] || ""}</span>
+    <span class="nature">${esc(f["Référence produit"] || "")}</span>
     ${f["Message interne à lire par"] === interneAttendu() ? '<span class="status-pill interne">💬 message interne</span>' : ""}
     ${f["Accord client - preuve"] ? '<span class="status-pill done">✓ Clôturé</span>' : ""}
     <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
@@ -177,11 +177,21 @@ function renderDossierRow(r) {
   return div;
 }
 
+// Historique de navigation : ouvrir un dossier pousse ?dossier=id, revenir à la liste l'enlève.
+// Ainsi le bouton retour du navigateur repasse par la liste au lieu de sortir de l'appli direct.
 function showList() {
+  if (new URLSearchParams(location.search).get("dossier")) {
+    history.pushState({}, "", location.pathname);
+  }
   $("#detailView").classList.add("hidden");
   $("#listView").classList.remove("hidden");
   loadDossiers(true);
 }
+
+window.addEventListener("popstate", () => {
+  const id = new URLSearchParams(location.search).get("dossier");
+  if (id) openDossier(id); else showList();
+});
 
 $("#btnLoadMore").addEventListener("click", () => loadDossiers(false));
 $("#filterStatut").addEventListener("change", () => loadDossiers(true));
@@ -206,6 +216,9 @@ function selectHtml(id, choices, current, required) {
 }
 
 async function openDossier(id) {
+  if (new URLSearchParams(location.search).get("dossier") !== id) {
+    history.pushState({}, "", `${location.pathname}?dossier=${id}`);
+  }
   state.currentId = id;
   $("#listView").classList.add("hidden");
   $("#detailView").classList.remove("hidden");
