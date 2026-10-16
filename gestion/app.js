@@ -288,14 +288,25 @@ function renderDetail(f) {
 
   // Coordonnées visibles des deux côtés : le magasin doit pouvoir rappeler le client lui-même.
   html += `<div class="panel"><h3>Coordonnées du client</h3>
-    <div class="kv-grid">
+    <div class="kv-grid" id="coordClientAffichage">
       ${kv("Nom", nomAffiche)}
       ${kv("Email", email)}
       ${kv("Téléphone", telephone)}
       ${kv("Numéro de facture", f["Numéro de facture"])}
     </div>
-    ${adresse ? `<div class="kv" style="margin-top:10px;"><div class="k">Adresse</div><div class="v" style="white-space:pre-line;">${esc(adresse)}</div></div>` : ""}
+    ${adresse ? `<div class="kv" style="margin-top:10px;" id="coordClientAdresse"><div class="k">Adresse</div><div class="v" style="white-space:pre-line;">${esc(adresse)}</div></div>` : ""}
     ${!telephone && !email ? `<p class="sub" style="margin:10px 0 0;">Aucune coordonnée enregistrée — dossier ancien, non rattaché à une fiche client.</p>` : ""}
+    ${isFull ? `
+      <p class="sub" style="margin:12px 0 0;"><a href="#" id="toggleFicheClient">Compléter / corriger la fiche client</a></p>
+      <div class="edit-grid hidden" id="ficheClientForm" style="margin-top:12px;">
+        <div class="field"><label for="f-client-prenom">Prénom</label><input type="text" id="f-client-prenom" value="${esc(prenom)}"></div>
+        <div class="field"><label for="f-client-nom">Nom</label><input type="text" id="f-client-nom" value="${esc(nom)}"></div>
+        <div class="field"><label for="f-client-tel">Téléphone</label><input type="text" id="f-client-tel" value="${esc(telephone)}"></div>
+        <div class="field"><label for="f-client-email">Email</label><input type="text" id="f-client-email" value="${esc(email)}"></div>
+        <div class="field" style="grid-column:1/-1;"><label for="f-client-adresse">Adresse</label><textarea id="f-client-adresse">${esc(adresse)}</textarea></div>
+      </div>
+      <div class="save-row hidden" id="ficheClientSaveRow" style="margin-top:10px;"><span class="save-msg" id="saveMsgClient"></span><button type="button" id="btnSaveClient">Enregistrer la fiche client</button></div>
+    ` : ""}
   </div>`;
 
   html += `<div class="panel"><h3>Déclaré par le client</h3>
@@ -391,6 +402,14 @@ function renderDetail(f) {
 
   $("#detailView").innerHTML = html;
   $("#backlink").addEventListener("click", showList);
+  if (isFull) {
+    $("#toggleFicheClient").addEventListener("click", (e) => {
+      e.preventDefault();
+      $("#ficheClientForm").classList.toggle("hidden");
+      $("#ficheClientSaveRow").classList.toggle("hidden");
+    });
+    $("#btnSaveClient").addEventListener("click", saveFicheClient);
+  }
   if (isFull) $("#btnSaveFull").addEventListener("click", saveFullSection);
   if (isFull) $("#btnSendMessage").addEventListener("click", sendMessage);
   $("#btnSaveMagasin").addEventListener("click", saveMagasinSection);
@@ -423,6 +442,30 @@ async function sendInterne() {
   } catch (e) {
     msgEl.textContent = e.message; msgEl.classList.add("err");
   } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+
+// Complète/corrige la fiche Clients liée au dossier (anciens dossiers sans téléphone/adresse).
+async function saveFicheClient() {
+  const btn = $("#btnSaveClient");
+  const msgEl = $("#saveMsgClient");
+  const payload = {
+    prenom: $("#f-client-prenom").value.trim(),
+    nom: $("#f-client-nom").value.trim(),
+    telephone: $("#f-client-tel").value.trim(),
+    email: $("#f-client-email").value.trim(),
+    adresse: $("#f-client-adresse").value.trim(),
+  };
+  msgEl.textContent = ""; msgEl.className = "save-msg";
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Enregistrement…';
+  try {
+    await api(`/api/gestion/dossiers/${state.currentId}/client`, { method: "POST", body: JSON.stringify(payload) });
+    openDossier(state.currentId);
+  } catch (e) {
+    msgEl.textContent = e.message; msgEl.classList.add("err");
     btn.disabled = false; btn.textContent = original;
   }
 }
