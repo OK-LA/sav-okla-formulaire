@@ -338,8 +338,7 @@ function renderDetail(f) {
         <div class="field"><label for="f-rembfourn">Remboursement fournisseur (€)</label><input type="number" step="0.01" id="f-rembfourn" value="${esc(f["Remboursement fournisseur"])}"></div>
         <div class="field"><label for="f-numavoir">Numéro avoir</label><input type="text" id="f-numavoir" value="${esc(f["Numéro avoir"])}"></div>
       </div>
-      <div class="field" style="margin-top:14px;"><label for="f-notes">Notes</label><textarea id="f-notes">${esc(f["Notes"])}</textarea></div>
-      <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
+      <div class="field" style="margin-top:14px;"><label for="f-remarques">Remarques</label><textarea id="f-remarques">${esc(f["Remarques"])}</textarea></div>
       <div class="save-row"><span class="save-msg" id="saveMsgFull"></span><button type="button" id="btnSaveFull">Enregistrer</button></div>
     </div>`;
   } else {
@@ -356,8 +355,7 @@ function renderDetail(f) {
         ${kv("Remboursement fournisseur", montant(f["Remboursement fournisseur"]))}
         ${kv("Numéro avoir", f["Numéro avoir"])}
       </div>
-      ${f["Notes"] ? `<div class="field" style="margin-top:14px;"><div class="k">Notes</div><div class="history-log">${esc(f["Notes"])}</div></div>` : ""}
-      ${f["Infos"] ? `<div class="field" style="margin-top:14px;"><div class="k">Infos</div><div class="history-log">${esc(f["Infos"])}</div></div>` : ""}
+      ${f["Remarques"] ? `<div class="field" style="margin-top:14px;"><div class="k">Remarques</div><div class="history-log">${esc(f["Remarques"])}</div></div>` : ""}
     </div>`;
   }
 
@@ -515,8 +513,7 @@ function saveFullSection() {
     montantAvoir: val("f-montantavoir") ? Number(val("f-montantavoir")) : null,
     remboursementFournisseur: val("f-rembfourn") ? Number(val("f-rembfourn")) : null,
     numeroAvoir: val("f-numavoir"),
-    notes: val("f-notes"),
-    infos: val("f-infos"),
+    remarques: val("f-remarques"),
   };
   saveSection($("#btnSaveFull"), $("#saveMsgFull"), fields);
 }
