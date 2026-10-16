@@ -395,6 +395,7 @@ function renderDetail(f) {
       <div class="field"><label for="f-retrait">Retrait par le client (date)</label><input type="date" id="f-retrait" value="${esc(f["Retrait par le client"])}"></div>
       <div class="field checkbox"><input type="checkbox" id="f-solutionexec" ${f["Solution exécutée"] ? "checked" : ""}><label for="f-solutionexec">Solution exécutée</label></div>
     </div>
+    ${f["Date de clôture"] ? `<p class="sub" style="margin:12px 0 0;">Clôturé le ${esc(f["Date de clôture"])} — posé automatiquement, non modifiable.</p>` : ""}
     <div class="save-row"><span class="save-msg" id="saveMsgMagasin"></span><button type="button" id="btnSaveMagasin">Enregistrer</button></div>
   </div>`;
 
