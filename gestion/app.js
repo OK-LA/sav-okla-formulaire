@@ -155,6 +155,22 @@ async function loadDossiers(reset) {
   }
 }
 
+// « il y a 3 j » affiché au bout de chaque ligne : la liste étant triée sur la dernière activité,
+// ça montre pourquoi un dossier est remonté en haut.
+function activiteRelative(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  const minutes = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.floor(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  const jours = Math.floor(heures / 24);
+  if (jours < 31) return `il y a ${jours} j`;
+  return d.toLocaleDateString("fr-FR");
+}
+
 function renderDossierRow(r) {
   const f = r.fields;
   const div = document.createElement("div");
@@ -172,6 +188,7 @@ function renderDossierRow(r) {
     ${f["Message interne à lire par"] === interneAttendu() ? '<span class="status-pill interne">💬 message interne</span>' : ""}
     ${f["Accord client - preuve"] ? '<span class="status-pill done">✓ Clôturé</span>' : ""}
     <span class="status-pill ${statusPillClass(statut)}">${statut || "—"}</span>
+    <span class="activite">${esc(activiteRelative(f["Dernière activité"]))}</span>
   `;
   div.addEventListener("click", () => openDossier(r.id));
   return div;
@@ -244,6 +261,9 @@ function renderDetail(f) {
   const photos = f["Supporting Photos"] || [];
   const isFull = state.role === "full";
 
+  const telephone = (f["Téléphone client"] || [])[0] || "";
+  const adresse = (f["Adresse client"] || [])[0] || "";
+
   const nomAffiche = (prenom || nom) ? `${prenom} ${nom}`.trim() : (f["Client"] || "");
   const reference = f["Référence produit"] || "";
   const designation = (f["Désignation produit"] || [])[0] || "";
@@ -266,6 +286,18 @@ function renderDetail(f) {
     </div>`;
   }
 
+  // Coordonnées visibles des deux côtés : le magasin doit pouvoir rappeler le client lui-même.
+  html += `<div class="panel"><h3>Coordonnées du client</h3>
+    <div class="kv-grid">
+      ${kv("Nom", nomAffiche)}
+      ${kv("Email", email)}
+      ${kv("Téléphone", telephone)}
+      ${kv("Numéro de facture", f["Numéro de facture"])}
+    </div>
+    ${adresse ? `<div class="kv" style="margin-top:10px;"><div class="k">Adresse</div><div class="v" style="white-space:pre-line;">${esc(adresse)}</div></div>` : ""}
+    ${!telephone && !email ? `<p class="sub" style="margin:10px 0 0;">Aucune coordonnée enregistrée — dossier ancien, non rattaché à une fiche client.</p>` : ""}
+  </div>`;
+
   html += `<div class="panel"><h3>Déclaré par le client</h3>
     <div class="kv-grid">
       ${kv("Magasin", f["Magasin"])}
@@ -276,7 +308,6 @@ function renderDetail(f) {
       ${kv("Nature du problème", f["Nature du problème constaté"])}
       ${kv("Date de la demande", f["Date de la demande"])}
       ${isFull ? kv("Date d'achat", f["date achat"]) : ""}
-      ${isFull ? kv("Numéro de facture", f["Numéro de facture"]) : ""}
       ${isFull ? kv("Date de livraison", f["Date de livraison"]) : ""}
       ${isFull ? kv("Date de déballage/montage", f["Date de déballage/montage"]) : ""}
       ${isFull ? kv("Monté par", f["Produit monté par vous ou livré déjà monté ?"]) : ""}
@@ -299,6 +330,23 @@ function renderDetail(f) {
       <div class="field" style="margin-top:14px;"><label for="f-notes">Notes</label><textarea id="f-notes">${esc(f["Notes"])}</textarea></div>
       <div class="field" style="margin-top:14px;"><label for="f-infos">Infos</label><textarea id="f-infos">${esc(f["Infos"])}</textarea></div>
       <div class="save-row"><span class="save-msg" id="saveMsgFull"></span><button type="button" id="btnSaveFull">Enregistrer</button></div>
+    </div>`;
+  } else {
+    // Même contenu côté magasin, mais en lecture seule : le vendeur voit où en est le traitement
+    // d'Émilie sans pouvoir le modifier (le worker refuse de toute façon ces champs pour ce rôle).
+    const montant = (v) => (v === undefined || v === null || v === "" ? "" : `${v} €`);
+    html += `<div class="panel"><h3>Traitement par Émilie <span class="sub" style="font-weight:400;">— lecture seule</span></h3>
+      <div class="kv-grid">
+        ${kv("Qualification retenue", f["Qualification retenue"])}
+        ${kv("Claim Status", f["Claim Status"])}
+        ${kv("Solution proposée", (f["Solution proposée"] || []).join(", "))}
+        ${kv("Numéro suivi", f["Numéro suivi"])}
+        ${kv("Montant avoir", montant(f["Montant avoir"]))}
+        ${kv("Remboursement fournisseur", montant(f["Remboursement fournisseur"]))}
+        ${kv("Numéro avoir", f["Numéro avoir"])}
+      </div>
+      ${f["Notes"] ? `<div class="field" style="margin-top:14px;"><div class="k">Notes</div><div class="history-log">${esc(f["Notes"])}</div></div>` : ""}
+      ${f["Infos"] ? `<div class="field" style="margin-top:14px;"><div class="k">Infos</div><div class="history-log">${esc(f["Infos"])}</div></div>` : ""}
     </div>`;
   }
 
