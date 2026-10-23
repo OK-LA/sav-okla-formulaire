@@ -25,7 +25,8 @@ const VALEUR_MAX_PLAUSIBLE = 10000;
 const DELAI_MAX_JOURS = 730;
 // Les dossiers saisis pour la casse interne portent un nom de magasin/expo au lieu d'un client.
 const CLIENT_INTERNE_RE = /^(magasins?|expo(sition)?|entrepot|ent|ok-?az|ham|breteuil|bret|roye|longueau|stock|client)(\s|$)/;
-const MOIS_COURTS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const FOURNISSEUR_INTERNE = "OK-LA";
+const MOIS_COURTS =["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 
 /* ---------- helpers de normalisation ---------- */
 function sansAccents(s) { return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, ""); }
@@ -210,7 +211,11 @@ function sectionVueEnsemble(cur, prec, b) {
   const enCours = cur.filter((d) => d.issue === "En cours").length;
   const avecValeur = cur.filter((d) => d.valeur != null);
   const dPec = cur.map((d) => d.delaiPriseEnCharge).filter((x) => x != null);
-  const dFour = cur.map((d) => d.delaiFournisseur).filter((x) => x != null);
+  // OK-LA (import direct) : « Demande au fournisseur » et « Réception à l'entrepôt » sont saisies
+  // le même jour (médiane 0 j, pièce prise en stock) — l'inclure ferait baisser artificiellement
+  // le délai des vrais fournisseurs. Il reste visible tel quel dans le tableau Fournisseurs.
+  const dFour = cur.filter((d) => d.fournisseur !== FOURNISSEUR_INTERNE).map((d) => d.delaiFournisseur).filter((x) => x != null);
+  const nFourBase = cur.filter((d) => d.fournisseur !== FOURNISSEUR_INTERNE).length;
   const dTot = cur.map((d) => d.delaiTotal).filter((x) => x != null);
   const issues = ISSUES_ORDRE.map((k) => ({ label: k, value: cur.filter((d) => d.issue === k).length }))
     .filter((i) => i.value).map((i) => ({ ...i, valueLabel: `${i.value} (${pct(i.value, cur.length)})` }));
@@ -224,7 +229,7 @@ function sectionVueEnsemble(cur, prec, b) {
       ${tuile("En cours", enCours, pct(enCours, cur.length) + " des dossiers")}
       ${tuile("Valeur des produits concernés", euros(avecValeur.reduce((s, d) => s + d.valeur, 0)), couverture(avecValeur.length, cur.length) + " · prix de vente")}
       ${tuile("Délai de prise en charge", dPec.length ? mediane(dPec) + " j" : "—", "demande client → demande fournisseur, médiane " + couverture(dPec.length, cur.length))}
-      ${tuile("Délai fournisseur", dFour.length ? mediane(dFour) + " j" : "—", "demande fournisseur → pièce reçue, médiane " + couverture(dFour.length, cur.length))}
+      ${tuile("Délai fournisseur", dFour.length ? mediane(dFour) + " j" : "—", "demande fournisseur → pièce reçue, médiane hors OK-LA " + couverture(dFour.length, nFourBase))}
       ${tuile("Délai total du SAV", dTot.length >= seuilDelai ? mediane(dTot) + " j" : "—", dTot.length >= seuilDelai ? "demande → clôture, médiane " + couverture(dTot.length, cur.length) : `pas encore assez de dossiers clôturés depuis l'appli (${dTot.length})`)}
     </div>
     <h4>Dossiers par mois</h4>
@@ -271,7 +276,7 @@ function sectionFournisseurs(cur) {
       { key: "valeur", label: "Valeur produits", num: true, html: (l) => l.valeur != null ? `${euros(l.valeur)} <span class="st-cov">(${l.valeurN})</span>` : "—" },
       { key: "refMaj", label: "Produit le plus fréquent" },
     ], lignes, { action: (l) => "fournisseur:" + l.nom })}
-    <p class="st-note">Délai fournisseur = médiane entre « Demande au fournisseur » et « Réception à l'entrepôt ». Entre parenthèses : nombre de dossiers où l'information existe.</p>
+    <p class="st-note">Délai fournisseur = médiane entre « Demande au fournisseur » et « Réception à l'entrepôt ». Entre parenthèses : nombre de dossiers où l'information existe. Pour OK-LA (import direct), le délai est presque toujours de 0 j : les deux dates sont saisies le même jour.</p>
   </div>`;
 }
 
