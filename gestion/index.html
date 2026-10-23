@@ -200,6 +200,43 @@
     animation: spin 0.7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- statistiques ---- */
+  #statsView h4 { margin: 20px 0 10px; font-size: 0.86rem; color: var(--brown-700); }
+  .st-filters select { min-width: 150px; }
+  .st-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .st-tile { background: var(--brown-100); border-radius: 8px; padding: 12px 14px; }
+  .st-tile-k { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--gray-500); }
+  .st-tile-v { font-size: 1.6rem; font-weight: 700; color: var(--brown-900); margin: 2px 0; font-variant-numeric: tabular-nums; }
+  .st-tile-d { font-size: 0.76rem; color: var(--brown-700); }
+  .st-cov { color: var(--gray-500); font-size: 0.76rem; font-weight: 400; }
+  .st-note { font-size: 0.8rem; color: var(--gray-500); margin: 8px 0; }
+  .st-vide { color: var(--gray-500); font-size: 0.85rem; }
+  .st-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 760px) { .st-grid2 { grid-template-columns: 1fr; } }
+  .st-bars { display: flex; flex-direction: column; gap: 6px; }
+  .st-bar-row { display: grid; grid-template-columns: minmax(110px, 38%) 1fr auto; align-items: center; gap: 10px; font-size: 0.84rem; }
+  .st-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-bar-track { height: 12px; }
+  .st-bar-fill { height: 100%; background: var(--orange); border-radius: 0 4px 4px 0; }
+  .st-bar-fill.muted { background: var(--brown-500); }
+  .st-bar-val { color: var(--brown-700); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 0.8rem; }
+  .st-cols { display: flex; align-items: flex-end; gap: 2px; height: 170px; padding-top: 16px; }
+  .st-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+  .st-col:hover .st-col-bar { background: var(--orange-dark); }
+  .st-col-bar { width: 70%; max-width: 34px; background: var(--orange); border-radius: 4px 4px 0 0; min-height: 0; }
+  .st-col-n { font-size: 0.68rem; color: var(--brown-700); margin-bottom: 2px; }
+  .st-col-l { font-size: 0.64rem; color: var(--gray-500); height: 16px; margin-top: 4px; white-space: nowrap; }
+  .st-table-wrap { overflow-x: auto; }
+  .st-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  .st-table th { text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.02em; color: var(--gray-500); border-bottom: 1.5px solid var(--gray-300); padding: 6px 8px; cursor: pointer; white-space: nowrap; user-select: none; }
+  .st-table th.sorted { color: var(--brown-700); }
+  .st-table td { padding: 7px 8px; border-bottom: 1px solid var(--brown-100); vertical-align: top; }
+  .st-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .st-click { cursor: pointer; }
+  tr.st-click:hover td, .st-bar-row.st-click:hover, .st-list li.st-click:hover { background: var(--brown-100); }
+  .st-list { margin: 0; padding-left: 18px; font-size: 0.84rem; }
+  .st-list li { padding: 3px 4px; }
 </style>
 </head>
 <body>
@@ -207,6 +244,7 @@
 <header class="app-header">
   <h1>SAV OK-LA — Gestion<span class="role-badge hidden" id="roleBadge"></span></h1>
   <div class="spacer"></div>
+  <button type="button" id="btnStats" class="hidden">📊 Statistiques</button>
   <button type="button" id="btnLogout" class="hidden">Déconnexion</button>
 </header>
 
@@ -241,8 +279,12 @@
   <!-- DETAIL -->
   <section id="detailView" class="hidden"></section>
 
+  <!-- STATISTIQUES (accès complet uniquement) -->
+  <section id="statsView" class="hidden"></section>
+
 </main>
 
-<script src="app.js?v=20261016c"></script>
+<script src="app.js?v=20261023a"></script>
+<script src="stats.js?v=20261023a"></script>
 </body>
 </html>

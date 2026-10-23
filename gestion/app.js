@@ -46,6 +46,7 @@ let state = { token: localStorage.getItem(TOKEN_KEY) || "", role: localStorage.g
 // Lien direct depuis un email (?dossier=recXXXXXXXXXXXXXXX) : ouvre ce dossier précis une fois
 // connecté, au lieu de la liste. Reste dans l'URL, donc un rechargement rouvre le même dossier.
 const pendingDossierId = new URLSearchParams(location.search).get("dossier");
+const pendingVue = new URLSearchParams(location.search).get("vue");
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 
@@ -73,6 +74,7 @@ function showLoggedOut() {
   $("#loginView").classList.remove("hidden");
   $("#listView").classList.add("hidden");
   $("#detailView").classList.add("hidden");
+  hideStatsView();
   $("#btnLogout").classList.add("hidden");
   $("#roleBadge").classList.add("hidden");
 }
@@ -83,7 +85,18 @@ async function showLoggedIn() {
   badge.textContent = state.role === "full" ? "Accès complet" : "Magasin";
   badge.classList.remove("hidden");
   await loadChoices();
-  if (pendingDossierId) { openDossier(pendingDossierId); } else { showList(); }
+  // Statistiques : bouton présent seulement dans /gestion/ (stats.js n'est pas chargé par /magasin/).
+  const btnStats = $("#btnStats");
+  if (btnStats) btnStats.classList.toggle("hidden", state.role !== "full");
+  if (pendingDossierId) { openDossier(pendingDossierId); }
+  else if (pendingVue === "stats" && typeof showStats === "function") { showStats(); }
+  else { showList(); }
+}
+function hideStatsView() {
+  const v = $("#statsView");
+  if (v) v.classList.add("hidden");
+  const b = $("#btnStats");
+  if (b && !state.role) b.classList.add("hidden");
 }
 function logout() {
   state.token = ""; state.role = "";
@@ -197,17 +210,22 @@ function renderDossierRow(r) {
 // Historique de navigation : ouvrir un dossier pousse ?dossier=id, revenir à la liste l'enlève.
 // Ainsi le bouton retour du navigateur repasse par la liste au lieu de sortir de l'appli direct.
 function showList() {
-  if (new URLSearchParams(location.search).get("dossier")) {
+  const params = new URLSearchParams(location.search);
+  if (params.get("dossier") || params.get("vue")) {
     history.pushState({}, "", location.pathname);
   }
   $("#detailView").classList.add("hidden");
+  hideStatsView();
   $("#listView").classList.remove("hidden");
   loadDossiers(true);
 }
 
 window.addEventListener("popstate", () => {
-  const id = new URLSearchParams(location.search).get("dossier");
-  if (id) openDossier(id); else showList();
+  const params = new URLSearchParams(location.search);
+  const id = params.get("dossier");
+  if (id) openDossier(id);
+  else if (params.get("vue") === "stats" && typeof showStats === "function") showStats();
+  else showList();
 });
 
 $("#btnLoadMore").addEventListener("click", () => loadDossiers(false));
@@ -238,6 +256,7 @@ async function openDossier(id) {
   }
   state.currentId = id;
   $("#listView").classList.add("hidden");
+  hideStatsView();
   $("#detailView").classList.remove("hidden");
   $("#detailView").innerHTML = '<div class="loading">Chargement du dossier…</div>';
   try {
